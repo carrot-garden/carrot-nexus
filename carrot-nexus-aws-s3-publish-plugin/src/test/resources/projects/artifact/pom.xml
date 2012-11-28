@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
+
+    All rights reserved. Licensed under the OSI BSD License.
+
+    http://www.opensource.org/licenses/bsd-license.php
+
+-->
+<project>
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>nexus1961</groupId>
+	<artifactId>artifact</artifactId>
+	<version>1.0</version>
+
+	<distributionManagement>
+		<repository>
+			<id>nexus-test-harness-repo</id>
+			<url>${nexus-base-url}content/repositories/nexus-test-harness-repo</url>
+		</repository>
+	</distributionManagement>
+
+</project>

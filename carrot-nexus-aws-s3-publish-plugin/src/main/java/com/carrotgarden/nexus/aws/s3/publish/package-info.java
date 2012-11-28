@@ -5,12 +5,5 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.event;
+package com.carrotgarden.nexus.aws.s3.publish;
 
-public enum Mode {
-
-	ADD, //
-
-	REMOVE, //
-
-}

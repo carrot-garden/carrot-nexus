@@ -1,39 +1,62 @@
+/**
+ * Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
+ *
+ * All rights reserved. Licensed under the OSI BSD License.
+ *
+ * http://www.opensource.org/licenses/bsd-license.php
+ */
 package com.carrotgarden.nexus.aws.s3.publish.attribute;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.attributes.StorageFileItemInspector;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
-@Named(CarrotFileInspector.NAME)
-public class CarrotFileInspector implements StorageFileItemInspector {
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
+import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+
+@Named
+@Singleton
+public class CarrotFileInspector implements StorageFileItemInspector,
+		CarrotFile {
 
 	public static final String NAME = "CarrotFileInspector";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	{
-		log.info("###### hello ######");
+
+		log.info("init " + NAME);
+
 	}
+
+	@Inject
+	private AmazonService amazonService;
 
 	@Override
 	public Set<String> getIndexableKeywords() {
 
-		return null;
+		final Set<String> wordSet = new HashSet<String>();
+
+		wordSet.add(ATTR_IS_SAVED);
+
+		return wordSet;
 
 	}
 
 	@Override
 	public boolean isHandled(final StorageItem item) {
 
-		return true;
+		return item instanceof StorageFileItem;
 
 	}
 
@@ -41,13 +64,7 @@ public class CarrotFileInspector implements StorageFileItemInspector {
 	public void processStorageFileItem(final StorageFileItem item,
 			final File file) throws Exception {
 
-		final ResourceStoreRequest request = item.getResourceStoreRequest();
-
-		final String path = item.getPath();
-
-		final String repoId = item.getRepositoryId();
-
-		// log.info("repoId={} path={}", repoId, path);
+		Util.processStorageFileItem(amazonService, item, file, log);
 
 	}
 

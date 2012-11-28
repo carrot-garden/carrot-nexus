@@ -5,12 +5,12 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.event;
+package com.carrotgarden.nexus.aws.s3.publish.scanner;
 
-public enum Mode {
+import org.sonatype.nexus.proxy.repository.Repository;
 
-	ADD, //
+public interface ScannerService {
 
-	REMOVE, //
+	void register(Repository repository);
 
 }

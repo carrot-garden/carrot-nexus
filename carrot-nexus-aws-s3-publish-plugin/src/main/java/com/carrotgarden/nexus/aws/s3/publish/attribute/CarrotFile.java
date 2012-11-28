@@ -5,12 +5,11 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.event;
+package com.carrotgarden.nexus.aws.s3.publish.attribute;
 
-public enum Mode {
+public interface CarrotFile {
 
-	ADD, //
-
-	REMOVE, //
+	String ATTR_IS_SAVED = "carrot.aws.s3.is-saved";
+	String ATTR_SAVE_TIME = "carrot.aws.s3.save-time";
 
 }
