@@ -24,21 +24,10 @@ import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotFile;
 
 public class Util {
 
-	public static String filePath(final ApplicationConfiguration config,
-			final Repository repository, final File file) throws Exception {
-
-		final File root = repoRoot(config, repository);
-
-		return filePath(root, file);
-
-	}
-
 	/** nexus artifact path from root/file relation */
-	public static String filePath(final File root, final File file) {
+	public static String relativePath(final File root, final File file) {
 
-		final String path = root.toURI().relativize(file.toURI()).getPath();
-
-		return path.startsWith("/") ? path : "/" + path;
+		return root.toURI().relativize(file.toURI()).getPath();
 
 	}
 

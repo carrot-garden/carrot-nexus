@@ -7,6 +7,8 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.scanner;
 
+import static com.carrotgarden.nexus.aws.s3.publish.util.Util.*;
+
 import java.io.File;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +34,6 @@ import org.sonatype.nexus.threads.NexusThreadFactory;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotFile;
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 
 @Named
 @Singleton
@@ -65,7 +66,7 @@ public class ScannerServiceImpl implements ScannerService {
 
 		final File root;
 		try {
-			root = Util.repoRoot(config, repository);
+			root = repoRoot(config, repository);
 			log.info("found root : " + root);
 		} catch (final Exception e) {
 			log.error("wrong repot root", e);
@@ -86,9 +87,9 @@ public class ScannerServiceImpl implements ScannerService {
 
 			final File file = iterator.next();
 
-			final String path = Util.filePath(root, file);
+			final String path = rootFullPath(relativePath(root, file));
 
-			if (Util.isIgnoredPath(path)) {
+			if (isIgnoredPath(path)) {
 				continue;
 			}
 
@@ -141,7 +142,7 @@ public class ScannerServiceImpl implements ScannerService {
 			return true;
 		}
 
-		return Util.processStorageFileItem(//
+		return processStorageFileItem(//
 				amazonService, (StorageFileItem) item, file, log);
 
 	}
@@ -154,7 +155,7 @@ public class ScannerServiceImpl implements ScannerService {
 
 		final String id = repository.getId();
 
-		if (Util.isProperRepository(repository)) {
+		if (isProperRepository(repository)) {
 
 			if (repoMap.containsKey(id)) {
 				log.info(" repo presnet: {}", id);
