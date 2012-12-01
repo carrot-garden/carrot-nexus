@@ -26,9 +26,12 @@ import org.testng.annotations.Test;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonConfig;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
-import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotFile;
+import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 
-public class DeployIT extends AbstractNexusIntegrationTest {
+/**
+ * @
+ */
+public class MainIT extends AbstractNexusIntegrationTest {
 
 	static {
 
@@ -36,12 +39,13 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 		staticLog.info("#### load");
 
-		/** do not provide SecurityModule - guice injection bug */
-		TestContainer.getInstance().startPlexusContainer(DeployIT.class);
+		/**
+		 * do not provide SecurityModule - guice injection bug
+		 * <p>
+		 * see {@link #startITPlexusContainer()}
+		 */
+		TestContainer.getInstance().startPlexusContainer(MainIT.class);
 
-	}
-	{
-		log.info("#### init");
 	}
 
 	private static Map<String, String> fromJson(final File file)
@@ -64,19 +68,23 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 		}
 	}
 
-	@Override
-	public void startITPlexusContainer() {
-		// disable; see above static { }
-	}
+	private AmazonConfig amazonConfig;
+
+	private AmazonService amazonService;
 
 	//
 
 	@Mock
 	private ApplicationConfiguration config;
 
-	private AmazonConfig amazonConfig;
+	{
+		log.info("#### init");
+	}
 
-	private AmazonService amazonService;
+	/** root config folder */
+	private File configBase() {
+		return new File(WORK_CONF_DIR);
+	}
 
 	@BeforeTest
 	public void mockInit() throws Exception {
@@ -93,24 +101,30 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 	//
 
-	/** dedicated test repo id */
-	private String repoId() {
-		return REPO_TEST_HARNESS_REPO;
+	/** configuration which has no amazon access */
+	private void provideInvalidConfig() throws Exception {
+
+		final File folder = new File("./src/main/resources");
+
+		final File source = new File(folder, AmazonConfig.PROPS_FILE);
+		final File target = new File(configBase(), AmazonConfig.PROPS_FILE);
+
+		FileUtils.copyFile(source, target);
+
 	}
 
-	private String repoUrl() {
-		return getRepositoryUrl(repoId());
-	}
+	/** configuration with proper amazon access */
+	private void provideValidConfig() throws Exception {
 
-	/** root dir of test repo */
-	private File repoRoot() {
-		return new File(nexusWorkDir, "storage/" + repoId());
-	}
+		final String home = System.getProperty("user.home");
 
-	/** artifact item file in the test repo */
-	private File repoItemFile(final String path) {
-		final String absPath = repoRoot().getAbsolutePath() + "/" + path;
-		return new File(absPath);
+		final File folder = new File(home, ".amazon/carrotgarden");
+
+		final File source = new File(folder, AmazonConfig.PROPS_FILE);
+		final File target = new File(configBase(), AmazonConfig.PROPS_FILE);
+
+		FileUtils.copyFile(source, target);
+
 	}
 
 	/** attribute file in the test repo */
@@ -120,15 +134,37 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 		return new File(absPath);
 	}
 
-	/** root config folder */
-	private File configBase() {
-		return new File(WORK_CONF_DIR);
+	/** dedicated test repo id */
+	private String repoId() {
+		return REPO_TEST_HARNESS_REPO;
 	}
 
-	@Test
-	public void testDeployer() throws Exception {
+	/** artifact item file in the test repo */
+	private File repoItemFile(final String path) {
+		final String absPath = repoRoot().getAbsolutePath() + "/" + path;
+		return new File(absPath);
+	}
 
-		provideConfig();
+	/** root dir of test repo */
+	private File repoRoot() {
+		return new File(nexusWorkDir, "storage/" + repoId());
+	}
+
+	/** root url of test repo */
+	private String repoUrl() {
+		return getRepositoryUrl(repoId());
+	}
+
+	@Override
+	public void startITPlexusContainer() {
+		/**
+		 * disable; see above static { }
+		 */
+	}
+
+	/** normal deploy */
+	// @Test
+	public void testDeployer() throws Exception {
 
 		testDeployer("junit/junit/3.8.1/junit-3.8.1.pom");
 
@@ -143,6 +179,8 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 		log.info("### hello");
 
+		provideValidConfig();
+
 		Assert.assertTrue(amazonService.kill(path), "amazon delete");
 
 		final long timeStart = System.currentTimeMillis();
@@ -152,6 +190,8 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 		final File source = getTestFile(path);
 
 		log.info("### source=" + source);
+
+		Assert.assertTrue(source.exists(), "source present");
 
 		getDeployUtils().deployWithWagon("http", repoUrl(), source, path);
 
@@ -172,10 +212,10 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 		final Map<String, String> map = fromJson(attrib);
 
-		Assert.assertEquals(map.get(CarrotFile.ATTR_IS_SAVED), "true",
-				"attrigute is present");
+		Assert.assertEquals(map.get(CarrotAttribute.ATTR_IS_SAVED),
+				CarrotAttribute.ATTR_TRUE_VALUE, "attrigute is present");
 
-		final String timeText = map.get(CarrotFile.ATTR_SAVE_TIME);
+		final String timeText = map.get(CarrotAttribute.ATTR_SAVE_TIME);
 
 		final long timeSaved = Long.parseLong(timeText);
 
@@ -193,16 +233,29 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 	}
 
-	private void provideConfig() throws Exception {
+	/** should fail on client side when amazon is not available */
+	// @Test(expectedExceptions = { TransferFailedException.class })
+	public void testFailure() throws Exception {
 
-		final String home = System.getProperty("user.home");
+		log.info("### hello");
 
-		final File amazon = new File(home, ".amazon/carrotgarden");
+		provideInvalidConfig();
 
-		final File source = new File(amazon, AmazonConfig.PROPS_FILE);
-		final File target = new File(configBase(), AmazonConfig.PROPS_FILE);
+		final String path = "junit/junit/3.8.1/junit-3.8.1.pom";
 
-		FileUtils.copyFile(source, target);
+		Assert.assertFalse(amazonService.kill(path),
+				"amazon should not be available");
+
+		final File source = getTestFile(path);
+
+		log.info("### source=" + source);
+
+		Assert.assertTrue(source.exists(), "source present");
+
+		log.info("### attempt to deploy");
+
+		/** should blow up with exception */
+		getDeployUtils().deployWithWagon("http", repoUrl(), source, path);
 
 	}
 
@@ -212,7 +265,7 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 		log.info("### hello");
 
-		provideConfig();
+		provideValidConfig();
 
 		final String path = "test/test/1.0/artifact-1.0.jar";
 
@@ -250,14 +303,14 @@ public class DeployIT extends AbstractNexusIntegrationTest {
 
 		getEventInspectorsUtil().waitForCalmPeriod();
 
-		Assert.assertTrue(attrib.exists(), "attribute file present");
+		Assert.assertTrue(attrib.exists(), "attribute should be file present");
 
 		final Map<String, String> map = fromJson(attrib);
 
-		Assert.assertEquals(map.get(CarrotFile.ATTR_IS_SAVED), "true",
-				"attribute entry is present");
+		Assert.assertEquals(map.get(CarrotAttribute.ATTR_IS_SAVED),
+				CarrotAttribute.ATTR_TRUE_VALUE, "attribute entry is present");
 
-		final String timeText = map.get(CarrotFile.ATTR_SAVE_TIME);
+		final String timeText = map.get(CarrotAttribute.ATTR_SAVE_TIME);
 
 		final long timeSaved = Long.parseLong(timeText);
 

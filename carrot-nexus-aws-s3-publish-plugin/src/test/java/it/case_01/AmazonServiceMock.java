@@ -8,9 +8,9 @@
 package it.case_01;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonConfig;
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonServiceImpl;
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonServiceProvider;
 
-class AmazonServiceMock extends AmazonServiceImpl {
+class AmazonServiceMock extends AmazonServiceProvider {
 
 	AmazonServiceMock(final AmazonConfig amazonConfig) {
 

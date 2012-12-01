@@ -7,9 +7,11 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.attribute;
 
-public interface CarrotFile {
+public interface CarrotAttribute {
 
 	String ATTR_IS_SAVED = "carrot.aws.s3.is-saved";
 	String ATTR_SAVE_TIME = "carrot.aws.s3.save-time";
+
+	String ATTR_TRUE_VALUE = "true";
 
 }

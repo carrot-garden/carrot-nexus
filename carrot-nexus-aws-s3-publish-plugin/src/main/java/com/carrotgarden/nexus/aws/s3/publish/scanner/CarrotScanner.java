@@ -9,7 +9,7 @@ package com.carrotgarden.nexus.aws.s3.publish.scanner;
 
 import org.sonatype.nexus.proxy.repository.Repository;
 
-public interface ScannerService {
+public interface CarrotScanner {
 
 	void register(Repository repository);
 

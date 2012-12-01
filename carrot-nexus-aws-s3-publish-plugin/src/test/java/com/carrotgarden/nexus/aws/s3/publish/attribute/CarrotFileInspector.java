@@ -22,12 +22,11 @@ import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 
 @Named
 @Singleton
 public class CarrotFileInspector implements StorageFileItemInspector,
-		CarrotFile {
+		CarrotAttribute {
 
 	public static final String NAME = "CarrotFileInspector";
 
@@ -49,7 +48,7 @@ public class CarrotFileInspector implements StorageFileItemInspector,
 
 		wordSet.add(ATTR_IS_SAVED);
 
-		return wordSet;
+		return null;
 
 	}
 
@@ -64,7 +63,9 @@ public class CarrotFileInspector implements StorageFileItemInspector,
 	public void processStorageFileItem(final StorageFileItem item,
 			final File file) throws Exception {
 
-		Util.processStorageFileItem(amazonService, item, file, log);
+		/** see CarrotRepositoryStorage */
+
+		// Util.processStorageFileItem(amazonService, item, file, log);
 
 	}
 

@@ -29,11 +29,11 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 
-@Named
+@Named(AmazonServiceProvider.NAME)
 @Singleton
-public class AmazonServiceImpl implements AmazonService {
+public class AmazonServiceProvider implements AmazonService {
 
-	public static final String NAME = "AmazonServiceImpl";
+	public static final String NAME = "amazon-servivce";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

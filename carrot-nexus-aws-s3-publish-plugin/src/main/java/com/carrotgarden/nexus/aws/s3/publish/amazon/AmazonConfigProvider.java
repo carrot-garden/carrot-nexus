@@ -31,11 +31,11 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 
-@Named
+@Named(AmazonConfigProvider.NAME)
 @Singleton
-public class AmazonConfigImpl implements AmazonConfig {
+public class AmazonConfigProvider implements AmazonConfig {
 
-	public static final String NAME = "AmazonConfigImpl";
+	public static final String NAME = "amazon-config";
 
 	/** properties defaults resource inside plug-in jar */
 	private static final String PROPS_INIT = "/" + PROPS_FILE;
@@ -112,7 +112,7 @@ public class AmazonConfigImpl implements AmazonConfig {
 
 		try {
 
-			input = AmazonConfigImpl.class.getResourceAsStream(PROPS_INIT);
+			input = AmazonConfigProvider.class.getResourceAsStream(PROPS_INIT);
 			output = new FileOutputStream(configFile());
 
 			IOUtil.copy(input, output);
