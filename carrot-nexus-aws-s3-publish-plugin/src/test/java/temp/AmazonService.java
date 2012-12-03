@@ -5,7 +5,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.amazon;
+package temp;
 
 import java.io.File;
 
@@ -13,6 +13,9 @@ public interface AmazonService {
 
 	/** @return last amazon health check status */
 	boolean isAvailable();
+
+	/** run amazon health check now */
+	void checkAvailable();
 
 	//
 

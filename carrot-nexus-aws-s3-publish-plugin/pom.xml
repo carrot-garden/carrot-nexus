@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-
-    Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
-
-    All rights reserved. Licensed under the OSI BSD License.
-
-    http://www.opensource.org/licenses/bsd-license.php
-
--->
+<!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
+	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
+<!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
+	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -31,6 +26,8 @@
 
 		<app-lifecycle.version>1.7</app-lifecycle.version>
 
+		<capabilities-plugin.version>2.1.1</capabilities-plugin.version>
+
 	</properties>
 
 	<dependencies>
@@ -41,6 +38,12 @@
 			<artifactId>config</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+
+		<!-- map and cache -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.google.guava</groupId> -->
+		<!-- <artifactId>guava</artifactId> -->
+		<!-- </dependency> -->
 
 		<!-- scheduler -->
 		<dependency>
@@ -98,6 +101,14 @@
 			<groupId>org.sonatype.nexus</groupId>
 			<artifactId>nexus-rest-api</artifactId>
 			<version>${nexus.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sonatype.nexus.plugins</groupId>
+			<artifactId>nexus-capabilities-plugin</artifactId>
+			<version>${capabilities-plugin.version}</version>
+			<type>nexus-plugin</type>
 			<scope>provided</scope>
 		</dependency>
 
@@ -333,6 +344,42 @@
 				</plugins>
 			</build>
 		</profile>
+
+		<!-- project install for testing -->
+		<profile>
+			<id>target-install</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>local-install</id>
+								<phase>install</phase>
+								<goals>
+									<goal>copy</goal>
+								</goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>${project.groupId}</groupId>
+											<artifactId>${project.artifactId}</artifactId>
+											<version>${project.version}</version>
+											<classifier>bundle</classifier>
+											<type>zip</type>
+											<destFileName>plugin-bundle.zip</destFileName>
+										</artifactItem>
+									</artifactItems>
+									<outputDirectory>target/distro/sonatype-work/nexus/plugin-repository</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 	</profiles>
 
 </project>

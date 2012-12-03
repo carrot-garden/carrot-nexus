@@ -1,0 +1,65 @@
+<!--
+
+    Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
+
+    All rights reserved. Licensed under the OSI BSD License.
+
+    http://www.opensource.org/licenses/bsd-license.php
+
+-->
+<project default="maven" basedir="./..">
+
+	<echo message="basedir : ${basedir}" />
+
+	<property name="distro-id" value="nexus-2.2-01" />
+	<property name="distro-url" value="http://www.sonatype.org/downloads/${distro-id}-bundle.zip" />
+
+	<property name="nexus-bin" value="${basedir}/target/distro/${distro-id}/bin" />
+	<property name="nexus-script" value="${basedir}/target/distro/${distro-id}/bin/nexus" />
+
+	<property name="sonatype-work" value="${basedir}/target/distro/sonatype-work/nexus" />
+	<property name="sonatype-work-logs" value="${sonatype-work}/logs" />
+
+	<property name="plugin-folder" value="${sonatype-work}/plugin-repository" />
+	<property name="plugin-bundle" value="${plugin-folder}/plugin-bundle.zip" />
+
+
+	<property name="security-source" value="${basedir}/src/test/resources/target-install/security.xml" />
+	<property name="security-target" value="${sonatype-work}/conf/security.xml" />
+
+	<target name="maven">
+
+		<get src="${distro-url}" dest="target/distro.zip" skipexisting="true" />
+
+		<unzip src="target/distro.zip" dest="target/distro" overwrite="false" />
+
+		<chmod dir="${nexus-bin}" perm="u+rwx" includes="**/*" type="both" verbose="true" />
+
+		<exec executable="${nexus-script}">
+			<arg value="stop" />
+		</exec>
+
+		<exec executable="mvn">
+
+			<arg value="install" />
+
+			<arg value="--activate-profiles" />
+			<arg value="target-install" />
+
+		</exec>
+
+		<copy file="${security-source}" tofile="${security-target}" />
+
+		<delete failonerror="false">
+			<fileset dir="${sonatype-work-logs}" includes="**/*" />
+		</delete>
+
+		<unzip src="${plugin-bundle}" dest="${plugin-folder}" overwrite="true" />
+
+		<exec executable="${nexus-script}">
+			<arg value="start" />
+		</exec>
+
+	</target>
+
+</project>

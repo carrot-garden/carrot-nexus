@@ -10,6 +10,8 @@ package com.carrotgarden.nexus.aws.s3.publish.util;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -20,11 +22,15 @@ import org.sonatype.nexus.proxy.attributes.AttributeStorage;
 import org.sonatype.nexus.proxy.attributes.Attributes;
 import org.sonatype.nexus.proxy.item.RepositoryItemUid;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
+import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
+import org.sonatype.nexus.proxy.repository.GroupRepository;
 import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.nexus.proxy.storage.local.LocalRepositoryStorage;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 public class Util {
 
@@ -187,6 +193,61 @@ public class Util {
 	/** amazon hates "/" path prefix */
 	public static String rootLessPath(final String path) {
 		return path.startsWith("/") ? path.substring(1) : path;
+	}
+
+	public static String REPO_ID_ALL = "*";
+
+	public static boolean isRepoAll(final String repoId) {
+		return REPO_ID_ALL.equals(repoId);
+	}
+
+	public static Config reference() {
+		final ClassLoader loader = Util.class.getClassLoader();
+		return ConfigFactory.defaultReference(loader);
+	}
+
+	/**
+	 * list of repo id
+	 * <p>
+	 * from combo : "*" or group-id or repo-id
+	 */
+	public static List<String> repoList(final RepositoryRegistry registry,
+			final String comboId) {
+
+		final List<String> list = new LinkedList<String>();
+
+		if (isRepoAll(comboId)) {
+			final List<Repository> repoList = registry.getRepositories();
+			for (final Repository repo : repoList) {
+				if (repo instanceof GroupRepository) {
+					continue;
+				} else {
+					list.add(repo.getId());
+				}
+			}
+			return list;
+		}
+
+		final Repository combo;
+
+		try {
+			combo = registry.getRepository(comboId);
+		} catch (final Exception e) {
+			return list;
+		}
+
+		if (combo instanceof GroupRepository) {
+			final GroupRepository group = (GroupRepository) combo;
+			final List<Repository> repoList = group.getMemberRepositories();
+			for (final Repository repo : repoList) {
+				list.add(repo.getId());
+			}
+		} else {
+			list.add(combo.getId());
+		}
+
+		return list;
+
 	}
 
 }

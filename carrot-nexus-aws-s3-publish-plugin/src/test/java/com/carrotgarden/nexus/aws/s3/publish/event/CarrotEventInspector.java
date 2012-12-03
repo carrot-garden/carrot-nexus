@@ -23,7 +23,8 @@ import org.sonatype.nexus.proxy.maven.MavenRepository;
 import org.sonatype.nexus.proxy.maven.gav.Gav;
 import org.sonatype.plexus.appevents.Event;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
+import temp.AmazonService;
+
 
 @Named
 @Singleton

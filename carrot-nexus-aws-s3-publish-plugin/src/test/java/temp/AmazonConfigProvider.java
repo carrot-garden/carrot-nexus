@@ -5,7 +5,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.amazon;
+package temp;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,8 +17,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.PropertyUtils;
@@ -31,11 +29,11 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 
-@Named(AmazonConfigProvider.NAME)
-@Singleton
+//@Singleton
+//@Named(AmazonConfigProvider.NAME)
 public class AmazonConfigProvider implements AmazonConfig {
 
-	public static final String NAME = "amazon-config";
+	public static final String NAME = "carrot.amazon.config";
 
 	/** properties defaults resource inside plug-in jar */
 	private static final String PROPS_INIT = "/" + PROPS_FILE;

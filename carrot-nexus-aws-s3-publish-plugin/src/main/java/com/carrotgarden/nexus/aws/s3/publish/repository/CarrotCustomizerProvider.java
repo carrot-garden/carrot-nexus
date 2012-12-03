@@ -23,11 +23,11 @@ import org.sonatype.nexus.proxy.storage.local.fs.DefaultFSLocalRepositoryStorage
 import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotScanner;
 import com.carrotgarden.nexus.aws.s3.publish.storage.CarrotStorageProvider;
 
-@Named(CarrotCustomizerProvider.NAME)
 @Singleton
+@Named(CarrotCustomizerProvider.NAME)
 public class CarrotCustomizerProvider implements RepositoryCustomizer {
 
-	public static final String NAME = "carrot-repo-customizer";
+	public static final String NAME = "carrot.repo.customizer";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -62,7 +62,7 @@ public class CarrotCustomizerProvider implements RepositoryCustomizer {
 	public void configureRepository(final Repository repository)
 			throws ConfigurationException {
 
-		carrotScanner.register(repository);
+		// carrotScanner.register(repository);
 
 		repository.setLocalStorage(carrotStorage);
 

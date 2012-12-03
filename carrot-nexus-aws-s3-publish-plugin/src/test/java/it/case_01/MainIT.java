@@ -12,6 +12,7 @@ import static org.mockito.Mockito.*;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.maven.wagon.TransferFailedException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.plexus.util.FileUtils;
 import org.mockito.Mock;
@@ -24,8 +25,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonConfig;
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
+import temp.AmazonConfig;
+import temp.AmazonService;
+
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 
 /**
@@ -163,7 +165,7 @@ public class MainIT extends AbstractNexusIntegrationTest {
 	}
 
 	/** normal deploy */
-	// @Test
+	@Test
 	public void testDeployer() throws Exception {
 
 		testDeployer("junit/junit/3.8.1/junit-3.8.1.pom");
@@ -177,9 +179,14 @@ public class MainIT extends AbstractNexusIntegrationTest {
 	/** test external deploy */
 	private void testDeployer(final String path) throws Exception {
 
-		log.info("### hello");
+		log.info("### hello testDeployer");
 
 		provideValidConfig();
+
+		amazonService.checkAvailable();
+
+		Assert.assertTrue(amazonService.isAvailable(),
+				"amazon should be available");
 
 		Assert.assertTrue(amazonService.kill(path), "amazon delete");
 
@@ -234,17 +241,19 @@ public class MainIT extends AbstractNexusIntegrationTest {
 	}
 
 	/** should fail on client side when amazon is not available */
-	// @Test(expectedExceptions = { TransferFailedException.class })
+	@Test(expectedExceptions = { TransferFailedException.class })
 	public void testFailure() throws Exception {
 
-		log.info("### hello");
+		log.info("### hello testFailure");
 
 		provideInvalidConfig();
 
-		final String path = "junit/junit/3.8.1/junit-3.8.1.pom";
+		amazonService.checkAvailable();
 
-		Assert.assertFalse(amazonService.kill(path),
+		Assert.assertFalse(amazonService.isAvailable(),
 				"amazon should not be available");
+
+		final String path = "invalid/invalid/1.1.2/invalid-1.1.2.jar";
 
 		final File source = getTestFile(path);
 
@@ -263,11 +272,16 @@ public class MainIT extends AbstractNexusIntegrationTest {
 	@Test
 	public void testScanner() throws Exception {
 
-		log.info("### hello");
+		log.info("### hello testScanner");
 
 		provideValidConfig();
 
-		final String path = "test/test/1.0/artifact-1.0.jar";
+		amazonService.checkAvailable();
+
+		Assert.assertTrue(amazonService.isAvailable(),
+				"amazon should be available");
+
+		final String path = "scanner/scanner/1.0/scanner-1.0.jar";
 
 		Assert.assertTrue(amazonService.kill(path), "amazon delete");
 

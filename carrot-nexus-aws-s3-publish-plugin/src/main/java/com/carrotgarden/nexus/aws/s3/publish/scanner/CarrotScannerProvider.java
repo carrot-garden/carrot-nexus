@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.configuration.application.ApplicationConfiguration;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
+import org.sonatype.nexus.proxy.access.AccessManager;
 import org.sonatype.nexus.proxy.attributes.Attributes;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
@@ -32,12 +33,10 @@ import org.sonatype.nexus.threads.NexusThreadFactory;
 import org.sonatype.sisu.resource.scanner.Scanner;
 import org.sonatype.sisu.resource.scanner.helper.ListenerSupport;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonConfig;
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 
-@Named(CarrotScannerProvider.NAME)
 @Singleton
+@Named(CarrotScannerProvider.NAME)
 public class CarrotScannerProvider implements CarrotScanner {
 
 	private class ScannerTask extends ListenerSupport implements Runnable {
@@ -52,13 +51,19 @@ public class CarrotScannerProvider implements CarrotScanner {
 
 		@Override
 		public void onBegin() {
+
+			// amazonService.checkAvailable();
+
 			log.info("scan init repo={}", repository.getId());
 			log.info("found root : " + root);
+
 		}
 
 		@Override
 		public void onEnd() {
+
 			log.info("scan done repo={}", repository.getId());
+
 		}
 
 		@Override
@@ -71,6 +76,9 @@ public class CarrotScannerProvider implements CarrotScanner {
 			}
 
 			final ResourceStoreRequest request = new ResourceStoreRequest(path);
+
+			request.getRequestContext().put(//
+					AccessManager.REQUEST_AUTHORIZED, "true");
 
 			final StorageItem item;
 			try {
@@ -96,13 +104,16 @@ public class CarrotScannerProvider implements CarrotScanner {
 
 			while (true) {
 
-				final boolean isSaved = storeItem(amazonService, repository,
-						(StorageFileItem) item, file, log);
+				final boolean isSaved = true //
+				// && amazonService.isAvailable() //
+				// && storeItem(amazonService, repository,
+				// (StorageFileItem) item, file, log) //
+				;
 
 				if (isSaved) {
 					return;
 				} else {
-					sleep(amazonConfig.healthPeriod());
+					// sleep(amazonConfig.healthPeriod());
 				}
 
 			}
@@ -128,13 +139,13 @@ public class CarrotScannerProvider implements CarrotScanner {
 
 	}
 
-	public static final String NAME = "carrot-scanner";
+	public static final String NAME = "carrot.scanner";
 
-	@Inject
-	private AmazonConfig amazonConfig;
+	// @Inject
+	// private AmazonConfig amazonConfig;
 
-	@Inject
-	private AmazonService amazonService;
+	// @Inject
+	// private AmazonService amazonService;
 
 	@Inject
 	private ApplicationConfiguration config;

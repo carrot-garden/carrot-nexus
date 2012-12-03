@@ -9,7 +9,8 @@ package it.case_01;
 
 import org.sonatype.nexus.configuration.application.ApplicationConfiguration;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonConfigProvider;
+import temp.AmazonConfigProvider;
+
 
 class AmazonConfigMock extends AmazonConfigProvider {
 

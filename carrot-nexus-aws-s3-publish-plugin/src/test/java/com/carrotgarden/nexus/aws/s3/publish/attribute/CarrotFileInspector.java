@@ -21,7 +21,8 @@ import org.sonatype.nexus.proxy.attributes.StorageFileItemInspector;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
+import temp.AmazonService;
+
 
 @Named
 @Singleton
