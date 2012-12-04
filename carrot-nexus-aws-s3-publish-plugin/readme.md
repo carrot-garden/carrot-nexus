@@ -83,8 +83,19 @@ will be re-created again on nexus restart;
 ### troubleshoot
 
 * remember to click "Enabled" check box and "Save" after you supplied your credentials
-* navigate and refresh : ```Nexus -> Views -> System Feeds -> Errors and Warning Events```
+* navigate and refresh : ```Nexus -> Views -> System Feeds -> Error and Warning Events```
 * verify state of "Active" check box and pay attention to message there, if any
 * click "Refresh" to see if "Active" state changed
 * reduce health check period to see changes sooner
 * grep through nexus.log
+
+example error message you will find in ```System Feeds``` for invalid aws s3 access key: 
+```
+### amazon provider unavailable
+Status Code: 403, AWS Service: Amazon S3, 
+AWS Request ID: 89FA96BD3AD3AF32, 
+AWS Error Code: InvalidAccessKeyId, 
+AWS Error Message: The AWS Access Key Id you provided does not exist in our records., 
+S3 Extended Request ID: fMHxoVvODIa1DNqASSw4XPF9aBASw1Y+J8lHMxCgrYSvYJQ0LuU+WWowEjtvn0ip    
+at com.amazonaws.http.AmazonHttpClient.handleErrorRespon..
+``` 
