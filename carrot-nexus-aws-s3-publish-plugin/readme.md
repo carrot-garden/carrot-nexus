@@ -43,6 +43,8 @@ plug-in installs default configuration under
 ```
 Nexus -> Administration -> Capabilities
 ``` 
+
 which needs be configured with your amazon credentials, email address, etc.
+
 ![default config]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-01.png)
