@@ -33,23 +33,23 @@ maven central has
 
 ``` 
 #!/bin/bash
-
 #
-# unzip plugin distro into the plugins folder of your nexus, and then restart servivce:
+# unzip plugin bundle into the plugins folder of your nexus, and then restart servivce:
 #
-
 # nexus work folder
 NEXUS="/var/lib/nexus"
-
 # current plugin version
 VERSION="2.2.1-build001"
-
+#
+REPO="http://repo1.maven.org/maven2"
+GROUP="com/carrotgarden/nexus"
+ARTIFACT="carrot-nexus-aws-s3-publish-plugin"
+PLUGIN_BUNDLE="$ARTIFACT-$VERSION-bundle.zip"
+URL="$REPO/$GROUP/$NAME/$VERSION/$PLUGIN_BUNDLE"
+#
 cd $NEXUS/sonatype-work/nexus/plugin-repository
-
-wget http://repo1.maven.org/maven2/com/carrotgarden/nexus/plugins/carrot-nexus-aws-s3-publish-plugin/$VERSION/carrot-nexus-aws-s3-publish-plugin-$VERSION-bundle.zip
-
-unzip carrot-nexus-aws-s3-publish-plugin-$VERSION-bundle.zip
-
+wget $URL 
+unzip $PLUGIN_BUNDLE
 service nexus restart
 
 ```
@@ -65,3 +65,11 @@ which needs be configured with your amazon credentials, email address, etc.
 
 ![default config]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-01.png)
+
+### troubleshooting
+
+* remember to click "Enabled" check box and "Save" after you supplied your credentials
+* verify state of "Active" check box and pay attention to message there, if any
+* click "Refresh" to see if "Active" state changed
+* reduce health check period to see changes sooner
+* grep through nexus.log
