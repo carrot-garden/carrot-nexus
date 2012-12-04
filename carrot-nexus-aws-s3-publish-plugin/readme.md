@@ -74,6 +74,7 @@ Nexus -> Administration -> Capabilities
 ``` 
 
 which needs be configured with your amazon credentials, email address, etc.;
+
 if you delete all plugin configurations, default configuration 
 will be re-created again on nexus restart;
 
