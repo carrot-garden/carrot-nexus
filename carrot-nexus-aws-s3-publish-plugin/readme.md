@@ -31,12 +31,11 @@ and you are looking for ```bundle.zip``` artifact;
 
 ### nexus
 
-this plug-in depends on appropriate nexus and nexus-capabilities-plugin versions;
-
-please check ```nexus.version``` and ```nexus-capabilities.version``` in 
+this plug-in depends on appropriate **nexus** and **nexus-capabilities-plugin** versions;
+when in doubt, please check ```nexus.version``` and ```nexus-capabilities.version``` in the  
 [project descriptor]
 (https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/pom.xml)
-of the currently downloaded plug-in bundle
+of the currently downloaded plug-in bundle;
 
 ### install
 
@@ -65,7 +64,7 @@ service nexus restart
 
 ### configure
 
-plug-in installs default configuration under
+plug-in installs **default configuration** under
 ```
 Nexus -> Administration -> Capabilities
 ``` 
