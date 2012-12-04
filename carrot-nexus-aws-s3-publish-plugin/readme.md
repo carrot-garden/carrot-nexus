@@ -29,13 +29,21 @@ maven central has
 (http://search.maven.org/#search%7Cga%7C1%7Ccarrot-nexus-aws-s3-publish-plugin)
 and you are looking for ```bundle.zip``` artifact;
 
-### install
+### nexus
 
+this plug-in depends on appropriate nexus and nexus-capabilities-plugin versions;
+
+please check ```nexus.version``` and ```nexus-capabilities.version``` in 
+[project descriptor]
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/pom.xml)
+of the currently downloaded plug-in bundle
+
+### install
 
 ``` 
 #!/bin/bash
 #
-# unzip plugin bundle into the plugins folder of your nexus, and then restart servivce:
+# unzip plugin bundle into the plugins folder of your nexus, and then restart service:
 #
 # nexus work folder
 NEXUS="/var/lib/nexus"
