@@ -25,15 +25,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import temp.AmazonConfig;
-import temp.AmazonService;
+import temp.zAmazonConfig;
+import temp.zAmazonService;
 
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 
 /**
  * @
  */
-public class MainIT extends AbstractNexusIntegrationTest {
+public class Main01 extends AbstractNexusIntegrationTest {
 
 	static {
 
@@ -46,7 +46,7 @@ public class MainIT extends AbstractNexusIntegrationTest {
 		 * <p>
 		 * see {@link #startITPlexusContainer()}
 		 */
-		TestContainer.getInstance().startPlexusContainer(MainIT.class);
+		TestContainer.getInstance().startPlexusContainer(Main01.class);
 
 	}
 
@@ -70,9 +70,9 @@ public class MainIT extends AbstractNexusIntegrationTest {
 		}
 	}
 
-	private AmazonConfig amazonConfig;
+	private zAmazonConfig amazonConfig;
 
-	private AmazonService amazonService;
+	private zAmazonService amazonService;
 
 	//
 
@@ -108,8 +108,8 @@ public class MainIT extends AbstractNexusIntegrationTest {
 
 		final File folder = new File("./src/main/resources");
 
-		final File source = new File(folder, AmazonConfig.PROPS_FILE);
-		final File target = new File(configBase(), AmazonConfig.PROPS_FILE);
+		final File source = new File(folder, zAmazonConfig.PROPS_FILE);
+		final File target = new File(configBase(), zAmazonConfig.PROPS_FILE);
 
 		FileUtils.copyFile(source, target);
 
@@ -122,8 +122,8 @@ public class MainIT extends AbstractNexusIntegrationTest {
 
 		final File folder = new File(home, ".amazon/carrotgarden");
 
-		final File source = new File(folder, AmazonConfig.PROPS_FILE);
-		final File target = new File(configBase(), AmazonConfig.PROPS_FILE);
+		final File source = new File(folder, zAmazonConfig.PROPS_FILE);
+		final File target = new File(configBase(), zAmazonConfig.PROPS_FILE);
 
 		FileUtils.copyFile(source, target);
 
@@ -219,8 +219,8 @@ public class MainIT extends AbstractNexusIntegrationTest {
 
 		final Map<String, String> map = fromJson(attrib);
 
-		Assert.assertEquals(map.get(CarrotAttribute.ATTR_IS_SAVED),
-				CarrotAttribute.ATTR_TRUE_VALUE, "attrigute is present");
+		Assert.assertEquals(map.get(CarrotAttribute.ATTR_IS_SAVED), "true",
+				"attrigute is present");
 
 		final String timeText = map.get(CarrotAttribute.ATTR_SAVE_TIME);
 
@@ -321,8 +321,8 @@ public class MainIT extends AbstractNexusIntegrationTest {
 
 		final Map<String, String> map = fromJson(attrib);
 
-		Assert.assertEquals(map.get(CarrotAttribute.ATTR_IS_SAVED),
-				CarrotAttribute.ATTR_TRUE_VALUE, "attribute entry is present");
+		Assert.assertEquals(map.get(CarrotAttribute.ATTR_IS_SAVED), "true",
+				"attribute entry is present");
 
 		final String timeText = map.get(CarrotAttribute.ATTR_SAVE_TIME);
 

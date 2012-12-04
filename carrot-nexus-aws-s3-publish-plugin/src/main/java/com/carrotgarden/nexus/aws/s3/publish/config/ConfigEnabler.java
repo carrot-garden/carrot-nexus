@@ -7,6 +7,7 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
+/** internal */
 public interface ConfigEnabler {
 
 	void onEnable();

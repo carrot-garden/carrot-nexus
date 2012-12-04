@@ -9,6 +9,7 @@ package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+/** [ config-id : config-entry ] */
 @SuppressWarnings("serial")
 public class ConfigEntryMap extends ConcurrentHashMap<String, ConfigEntry> {
 

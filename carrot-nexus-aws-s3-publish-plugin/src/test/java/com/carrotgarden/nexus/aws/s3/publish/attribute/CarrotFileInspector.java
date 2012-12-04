@@ -21,13 +21,11 @@ import org.sonatype.nexus.proxy.attributes.StorageFileItemInspector;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
-import temp.AmazonService;
-
+import temp.zAmazonService;
 
 @Named
 @Singleton
-public class CarrotFileInspector implements StorageFileItemInspector,
-		CarrotAttribute {
+public class CarrotFileInspector implements StorageFileItemInspector {
 
 	public static final String NAME = "CarrotFileInspector";
 
@@ -40,14 +38,12 @@ public class CarrotFileInspector implements StorageFileItemInspector,
 	}
 
 	@Inject
-	private AmazonService amazonService;
+	private zAmazonService amazonService;
 
 	@Override
 	public Set<String> getIndexableKeywords() {
 
 		final Set<String> wordSet = new HashSet<String>();
-
-		wordSet.add(ATTR_IS_SAVED);
 
 		return null;
 

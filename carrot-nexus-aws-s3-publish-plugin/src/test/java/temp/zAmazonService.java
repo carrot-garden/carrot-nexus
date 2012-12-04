@@ -9,7 +9,7 @@ package temp;
 
 import java.io.File;
 
-public interface AmazonService {
+public interface zAmazonService {
 
 	/** @return last amazon health check status */
 	boolean isAvailable();

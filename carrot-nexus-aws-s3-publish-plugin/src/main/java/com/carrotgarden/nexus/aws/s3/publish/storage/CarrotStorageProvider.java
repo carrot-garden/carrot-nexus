@@ -52,9 +52,7 @@ public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	{
-
 		log.info("init " + NAME);
-
 	}
 
 	@Inject
@@ -87,7 +85,7 @@ public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
 
 		final String repoId = repository.getId();
 
-		log.info("\n\t ### repo:item {}:{}", repoId, item.getPath());
+		log.info("\n\t ### repo-item {}::{}", repoId, item.getPath());
 
 		final ConfigAction action = configRegistry.action(repoId);
 
@@ -105,16 +103,17 @@ public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
 
 		try {
 
-			final ConfigEntryList entryList = configRegistry.entryList(repoId);
-
 			final ResourceStoreRequest request = item.getResourceStoreRequest();
 
 			final File file = getFileFromBase(repository, request);
 
 			/** store local */
+
 			super.storeItem(repository, item);
 
 			/** store remote */
+
+			final ConfigEntryList entryList = configRegistry.entryList(repoId);
 
 			boolean isSaved = true;
 
@@ -141,4 +140,5 @@ public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
 		}
 
 	}
+
 }

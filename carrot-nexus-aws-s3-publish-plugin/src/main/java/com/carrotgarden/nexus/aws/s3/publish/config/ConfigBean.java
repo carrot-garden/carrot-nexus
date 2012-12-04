@@ -9,6 +9,7 @@ package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import static org.sonatype.nexus.plugins.capabilities.CapabilityType.*;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -18,23 +19,41 @@ import org.sonatype.nexus.plugins.capabilities.CapabilityType;
 
 import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /**
- * config bean
+ * capability configuration properties bean
  * <p>
  * see ./src/main/resources/reference.conf
  */
 public class ConfigBean {
 
+	/** capability type id */
 	public static final String NAME = "carrot.config.aws.s3.publish";
 
 	public static final CapabilityType TYPE = capabilityType(NAME);
 
 	public static Map<String, String> defaultProps() {
 
-		final Map<String, String> props = new HashMap<String, String>();
+		final Config root = Util.reference();
 
-		final Config config = Util.reference().getConfig("form-field");
+		return propsFrom(root);
+
+	}
+
+	public static Map<String, String> propsFrom(final File file) {
+
+		final Config root = ConfigFactory.parseFile(file);
+
+		return propsFrom(root);
+
+	}
+
+	public static Map<String, String> propsFrom(final Config root) {
+
+		final Config config = root.getConfig("form-field");
+
+		final Map<String, String> props = new HashMap<String, String>();
 
 		final Set<String> keySet = config.root().keySet();
 

@@ -31,7 +31,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 
 //@Singleton
 //@Named(AmazonConfigProvider.NAME)
-public class AmazonConfigProvider implements AmazonConfig {
+public class zAmazonConfigProvider implements zAmazonConfig {
 
 	public static final String NAME = "carrot.amazon.config";
 
@@ -110,7 +110,7 @@ public class AmazonConfigProvider implements AmazonConfig {
 
 		try {
 
-			input = AmazonConfigProvider.class.getResourceAsStream(PROPS_INIT);
+			input = zAmazonConfigProvider.class.getResourceAsStream(PROPS_INIT);
 			output = new FileOutputStream(configFile());
 
 			IOUtil.copy(input, output);

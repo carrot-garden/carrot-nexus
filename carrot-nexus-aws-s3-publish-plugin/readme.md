@@ -7,6 +7,8 @@
     http://www.opensource.org/licenses/bsd-license.php
 
 -->
+## CarrotGarden AWS S3 Publish Plugin
+
 ### info
 
 this is a 
@@ -15,10 +17,10 @@ this is a
 plugin that does amazon s3 publishing:
 
 each time you deploy or cache an artifact into your nexus,
-this same artifact is also published to the aws s3 bucket
+that artifact is also published to the aws s3 bucket;
 
 additionally, plugin runs a task on schedule
-which ensures that pre-existing artifacts are also published 
+which ensures that pre-existing artifacts are also published; 
 
 ### repo
 
@@ -30,12 +32,17 @@ maven central has
 
 unzip plugin distro in the plugin folder of your nexus, then restart
 ``` 
-${nexus-home}/sonatype-work/nexus/plugin-repository
+cd ${nexus-home}/sonatype-work/nexus/plugin-repository
+wget http://repo1.maven.org/maven2/com/carrotgarden/nexus/plugins/carrot-nexus-aws-s3-publish-plugin/2.2.1-build001/carrot-nexus-aws-s3-publish-plugin-2.2.1-build001-bundle.zip
+unzip carrot-nexus-aws-s3-publish-plugin-2.2.1-build001-bundle.zip
 ```
 
 ### configure
 
-plugin expects a configuration file the in nexus config folder:
-``` 
-${nexus-home}/sonatype-work/nexus/conf/carrot-nexus-aws-s3-publish-plugin.conf
+plug-in installs default configuration under
 ```
+Nexus -> Administration -> Capabilities
+``` 
+which needs be configured with your amazon credentials, email address, etc.
+[[doc/readme-01.png]]
+

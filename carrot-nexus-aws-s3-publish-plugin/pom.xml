@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
 	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
-<!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
-	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -22,11 +20,15 @@
 
 	<properties>
 
+		<pluginName>CarrotGarden AWS S3 Publish Plugin</pluginName>
+		<pluginDescription>Publish Nexus Repositories to AWS S3 </pluginDescription>
+		<pluginSiteUrl>https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/readme.md</pluginSiteUrl>
+
 		<nexus.version>2.2.1</nexus.version>
 
 		<app-lifecycle.version>1.7</app-lifecycle.version>
 
-		<capabilities-plugin.version>2.1.1</capabilities-plugin.version>
+		<nexus-capabilities.version>2.1.1</nexus-capabilities.version>
 
 	</properties>
 
@@ -39,24 +41,18 @@
 			<version>1.0.0</version>
 		</dependency>
 
-		<!-- map and cache -->
-		<!-- <dependency> -->
-		<!-- <groupId>com.google.guava</groupId> -->
-		<!-- <artifactId>guava</artifactId> -->
-		<!-- </dependency> -->
-
 		<!-- scheduler -->
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz</artifactId>
-			<version>2.1.6</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-api</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.quartz-scheduler</groupId> -->
+		<!-- <artifactId>quartz</artifactId> -->
+		<!-- <version>2.1.6</version> -->
+		<!-- <exclusions> -->
+		<!-- <exclusion> -->
+		<!-- <groupId>org.slf4j</groupId> -->
+		<!-- <artifactId>slf4j-api</artifactId> -->
+		<!-- </exclusion> -->
+		<!-- </exclusions> -->
+		<!-- </dependency> -->
 
 		<!-- amazon -->
 		<dependency>
@@ -92,7 +88,6 @@
 		<dependency>
 			<groupId>org.sonatype.nexus</groupId>
 			<artifactId>nexus-plugin-api</artifactId>
-			<version>${nexus.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -100,14 +95,13 @@
 		<dependency>
 			<groupId>org.sonatype.nexus</groupId>
 			<artifactId>nexus-rest-api</artifactId>
-			<version>${nexus.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- nexus configuration management -->
 		<dependency>
 			<groupId>org.sonatype.nexus.plugins</groupId>
 			<artifactId>nexus-capabilities-plugin</artifactId>
-			<version>${capabilities-plugin.version}</version>
 			<type>nexus-plugin</type>
 			<scope>provided</scope>
 		</dependency>
@@ -119,19 +113,8 @@
 			<version>${nexus.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-library</artifactId>
-			<version>1.3</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-core</artifactId>
-			<version>1.3</version>
-			<scope>test</scope>
-		</dependency>
 
+		<!-- test harness 1 -->
 		<dependency>
 			<groupId>org.sonatype.nexus</groupId>
 			<artifactId>nexus-test-harness-launcher</artifactId>
@@ -149,12 +132,31 @@
 			</exclusions>
 		</dependency>
 
+		<!-- test harness 2 -->
+		<dependency>
+			<groupId>org.sonatype.nexus</groupId>
+			<artifactId>nexus-testsuite-support</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.sonatype.nexus.capabilities</groupId>
+			<artifactId>nexus-capabilities-client</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>
 		<dependencies>
 
-			<!-- import -->
+			<!-- nexus webapp -->
+			<dependency>
+				<groupId>org.sonatype.nexus</groupId>
+				<artifactId>nexus-oss-webapp</artifactId>
+				<version>${nexus.version}</version>
+				<type>zip</type>
+				<classifier>bundle</classifier>
+			</dependency>
 			<dependency>
 				<groupId>org.sonatype.nexus</groupId>
 				<artifactId>nexus-webapp-dependencies</artifactId>
@@ -163,28 +165,51 @@
 				<scope>import</scope>
 			</dependency>
 
+			<dependency>
+				<groupId>org.sonatype.nexus</groupId>
+				<artifactId>nexus-testsuite-support</artifactId>
+				<version>${nexus.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.sonatype.nexus.plugins</groupId>
+				<artifactId>nexus-capabilities-plugin</artifactId>
+				<version>${nexus-capabilities.version}</version>
+				<type>nexus-plugin</type>
+			</dependency>
+			<dependency>
+				<groupId>org.sonatype.nexus.capabilities</groupId>
+				<artifactId>nexus-capabilities-client</artifactId>
+				<version>${nexus-capabilities.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
 	<build>
 		<plugins>
 
+			<!-- support annotations -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.0</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>
 			</plugin>
 
-			<!-- custom packaging -->
+			<!-- plugin packaging -->
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>app-lifecycle-maven-plugin</artifactId>
 				<version>${app-lifecycle.version}</version>
 				<extensions>true</extensions>
+				<configuration>
+					<pluginName>${pluginName}</pluginName>
+					<pluginDescription>${pluginDescription}</pluginDescription>
+					<pluginSiteUrl>${pluginSiteUrl}</pluginSiteUrl>
+				</configuration>
 				<dependencies>
 					<dependency>
 						<groupId>org.sonatype.plugins</groupId>
@@ -194,76 +219,76 @@
 				</dependencies>
 			</plugin>
 
-			<!-- plexus container injectiion -->
-			<plugin>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-component-metadata</artifactId>
-				<version>1.5.5</version>
-				<executions>
-					<execution>
-						<id>process-classes</id>
-						<goals>
-							<goal>generate-metadata</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>process-test-classes</id>
-						<goals>
-							<goal>generate-test-metadata</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.12.4</version>
-				<configuration>
-					<excludes>
-						<path>it/**/*</path>
-						<path>**/*$*</path>
-					</excludes>
-				</configuration>
-			</plugin>
+			<!-- plexus container injection metadata -->
+			<!-- <plugin> -->
+			<!-- <groupId>org.codehaus.plexus</groupId> -->
+			<!-- <artifactId>plexus-component-metadata</artifactId> -->
+			<!-- <version>1.5.5</version> -->
+			<!-- <executions> -->
+			<!-- <execution> -->
+			<!-- <id>process-classes</id> -->
+			<!-- <goals> -->
+			<!-- <goal>generate-metadata</goal> -->
+			<!-- </goals> -->
+			<!-- </execution> -->
+			<!-- <execution> -->
+			<!-- <id>process-test-classes</id> -->
+			<!-- <goals> -->
+			<!-- <goal>generate-test-metadata</goal> -->
+			<!-- </goals> -->
+			<!-- </execution> -->
+			<!-- </executions> -->
+			<!-- </plugin> -->
 
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.12.4</version>
+					<configuration>
+						<excludes>
+							<path>it/**/*</path>
+						</excludes>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>2.12.4</version>
+					<configuration>
+						<forkMode>always</forkMode>
+						<includes>
+							<path>it/**/*</path>
+						</includes>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>integration-test</goal>
+								<goal>verify</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+			</plugins>
+
+		</pluginManagement>
+
 	</build>
 
 	<profiles>
+
+		<!-- harness 1 -->
 		<profile>
-
-			<id>integration</id>
-
-			<dependencies>
-
-				<dependency>
-					<groupId>org.testng</groupId>
-					<artifactId>testng</artifactId>
-					<version>6.8</version>
-					<scope>test</scope>
-					<exclusions>
-						<exclusion>
-							<groupId>junit</groupId>
-							<artifactId>junit</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-
-			</dependencies>
-
+			<id>it-01</id>
 			<build>
-
 				<plugins>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.12.4</version>
-						<configuration>
-							<skipTests>true</skipTests>
-						</configuration>
-					</plugin>
 
 					<plugin>
 						<groupId>org.sonatype.nexus.plugins</groupId>
@@ -272,11 +297,6 @@
 						<configuration>
 
 							<nexusVersion>${nexus.version}</nexusVersion>
-
-							<!-- <nexus-base-url>http://localhost:8888/nexus/</nexus-base-url> -->
-							<!-- <staticPorts> -->
-							<!-- <nexus-application-port>8888</nexus-application-port> -->
-							<!-- </staticPorts> -->
 
 							<nexusBundleName>nexus-oss-webapp-${nexus.version}</nexusBundleName>
 
@@ -324,28 +344,45 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
-						<version>2.12.4</version>
-						<configuration>
-							<forkMode>once</forkMode>
-							<includes>
-								<path>it/**/*</path>
-							</includes>
-						</configuration>
-						<executions>
-							<execution>
-								<goals>
-									<goal>integration-test</goal>
-									<goal>verify</goal>
-								</goals>
-							</execution>
-						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-testng</artifactId>
+								<version>2.12.4</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 
 				</plugins>
 			</build>
 		</profile>
 
-		<!-- project install for testing -->
+		<!-- harness 2 -->
+		<profile>
+			<id>it-02</id>
+			<activation>
+				<property>
+					<name>it</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>2.12.4</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!-- nexus webapp install for manual testing -->
 		<profile>
 			<id>target-install</id>
 			<build>

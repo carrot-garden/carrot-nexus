@@ -24,6 +24,7 @@ import org.sonatype.nexus.threads.NexusThreadFactory;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetBucketLocationRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -145,10 +146,7 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 		} catch (final Exception e) {
 
-			setAvailable(false);
-
-			log.error("bada-boom", e);
-
+			processFailure(e);
 			return false;
 
 		}
@@ -173,12 +171,21 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 			return true;
 
+		} catch (final AmazonS3Exception e) {
+
+			switch (e.getStatusCode()) {
+			case 404:
+				log.error("path={} code={}", path, e.getErrorCode());
+				break;
+			default:
+				processFailure(e);
+				break;
+			}
+			return false;
+
 		} catch (final Exception e) {
 
-			setAvailable(false);
-
-			log.error("bada-boom", e);
-
+			processFailure(e);
 			return false;
 
 		}
@@ -205,13 +212,18 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 		} catch (final Exception e) {
 
-			setAvailable(false);
-
-			log.error("bada-boom", e);
-
+			processFailure(e);
 			return false;
 
 		}
+
+	}
+
+	protected void processFailure(final Throwable e) {
+
+		setAvailable(false);
+
+		log.error("provider failure", e);
 
 	}
 

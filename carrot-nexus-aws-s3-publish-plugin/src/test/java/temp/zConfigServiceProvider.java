@@ -14,7 +14,7 @@ import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
 
 //@Singleton
 //@Named(ConfigServiceProvider.NAME)
-public class ConfigServiceProvider implements ConfigService {
+public class zConfigServiceProvider implements zConfigService {
 
 	public static final String NAME = "carrot.config";
 

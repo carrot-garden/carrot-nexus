@@ -9,10 +9,10 @@ package it.case_01;
 
 import org.sonatype.nexus.configuration.application.ApplicationConfiguration;
 
-import temp.AmazonConfigProvider;
+import temp.zAmazonConfigProvider;
 
 
-class AmazonConfigMock extends AmazonConfigProvider {
+class AmazonConfigMock extends zAmazonConfigProvider {
 
 	AmazonConfigMock(final ApplicationConfiguration config) {
 		this.config = config;

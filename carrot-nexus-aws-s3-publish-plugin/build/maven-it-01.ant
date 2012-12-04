@@ -26,7 +26,7 @@
 			<arg value="verify" />
 
 			<arg value="--activate-profiles" />
-			<arg value="integration" />
+			<arg value="it-01" />
 
 		</exec>
 

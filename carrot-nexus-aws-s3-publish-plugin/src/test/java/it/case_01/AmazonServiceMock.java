@@ -7,12 +7,12 @@
  */
 package it.case_01;
 
-import temp.AmazonConfig;
-import temp.AmazonServiceProvider;
+import temp.zAmazonConfig;
+import temp.zAmazonServiceProvider;
 
-class AmazonServiceMock extends AmazonServiceProvider {
+class AmazonServiceMock extends zAmazonServiceProvider {
 
-	AmazonServiceMock(final AmazonConfig amazonConfig) {
+	AmazonServiceMock(final zAmazonConfig amazonConfig) {
 
 		this.amazonConfig = amazonConfig;
 

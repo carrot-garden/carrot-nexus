@@ -10,7 +10,7 @@ package temp;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 
-public interface AmazonConfig {
+public interface zAmazonConfig {
 
 	String PROPS_FILE = "carrot-nexus-aws-s3-publish-plugin.properties";
 

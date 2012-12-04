@@ -98,7 +98,7 @@ public class CarrotScannerProvider implements CarrotScanner {
 
 			final String value = attributes.get(CarrotAttribute.ATTR_IS_SAVED);
 
-			if (CarrotAttribute.ATTR_TRUE_VALUE.equals(value)) {
+			if ("true".equals(value)) {
 				return;
 			}
 

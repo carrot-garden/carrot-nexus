@@ -31,7 +31,7 @@ import com.carrotgarden.nexus.aws.s3.publish.condition.ReportingCondition;
 import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 
 /**
- * config life cycle
+ * capability life cycle manager
  */
 @Named(ConfigBean.NAME)
 public class ConfigCapability extends CapabilitySupport implements Capability,
@@ -89,12 +89,18 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	}
 
 	@Override
-	public String comboId() {
+	public String repoId() {
 		return configBean.repoId();
 	}
 
 	//
 
+	/**
+	 * process config state change events
+	 * <p>
+	 * UI "save" actions translate into {@link #onUpdate()}, which re-create
+	 * {@link #configBean}
+	 */
 	private void configState(final ConfigState configState) {
 
 		log.info("\n\t ### configState={}", configState);
@@ -107,10 +113,10 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			configBean = new ConfigBean(context().properties());
 
+			amazonProvider.config(configBean);
+
 			conditionRepoAll.setSatisfied( //
 					Util.isRepoAll(configBean.repoId()));
-
-			amazonProvider.config(configBean);
 
 			break;
 
@@ -194,18 +200,30 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	}
 
 	private String repoName() {
-		return repo() == null ? comboId() : repo().getName();
+
+		if ("*".equals(repoId())) {
+			return "All Repositories";
+		}
+
+		final Repository repo = repo();
+
+		if (repo == null) {
+			return "<invalid>";
+		}
+
+		return repo().getName();
+
 	}
 
 	private Repository repo() {
 		try {
-			return registry.getRepository(comboId());
+			return registry.getRepository(repoId());
 		} catch (final Exception e) {
 			return null;
 		}
 	}
 
-	/** activate/deactivate config; keep in registry */
+	/** activate/deactivate config */
 	@Override
 	public Condition activationCondition() {
 
@@ -213,7 +231,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 				.repositoryIsInService(new RepositoryConditions.RepositoryId() {
 					@Override
 					public String get() {
-						return comboId();
+						return repoId();
 					}
 				});
 
@@ -221,7 +239,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 				new RepositoryConditions.RepositoryId() {
 					@Override
 					public String get() {
-						return comboId();
+						return repoId();
 					}
 				});
 
@@ -239,7 +257,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	}
 
-	/** destroy config from registry when invalid */
+	/**  */
 	@Override
 	public Condition validityCondition() {
 
@@ -247,7 +265,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 				new RepositoryConditions.RepositoryId() {
 					@Override
 					public String get() {
-						return comboId();
+						return repoId();
 					}
 				});
 
@@ -260,7 +278,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	@Override
 	public String description() {
 
-		return "Repository/Group : " + repoName();
+		return "Publish : " + repoName();
 
 	}
 

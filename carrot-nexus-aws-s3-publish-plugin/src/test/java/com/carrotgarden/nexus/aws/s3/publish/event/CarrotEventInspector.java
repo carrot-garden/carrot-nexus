@@ -23,7 +23,7 @@ import org.sonatype.nexus.proxy.maven.MavenRepository;
 import org.sonatype.nexus.proxy.maven.gav.Gav;
 import org.sonatype.plexus.appevents.Event;
 
-import temp.AmazonService;
+import temp.zAmazonService;
 
 
 @Named
@@ -41,7 +41,7 @@ public class CarrotEventInspector implements EventInspector {
 	}
 
 	@Inject
-	private AmazonService amazonService;
+	private zAmazonService amazonService;
 
 	@Override
 	public boolean accepts(final Event<?> evt) {

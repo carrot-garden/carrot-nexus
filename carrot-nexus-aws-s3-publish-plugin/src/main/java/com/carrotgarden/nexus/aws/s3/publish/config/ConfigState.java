@@ -7,40 +7,51 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
-/** config life cycle states */
+/** capability life cycle states; mutually exclusive */
 public enum ConfigState {
 
-	UNKNOWN, //
-
-	//
-
 	ADDED, //
+
 	ENABLED, //
+
 	ACTIVATED, //
+
 	PASSIVATED, //
+
 	DISABLED, //
+
 	REMOVED, //
 
 	;
 
-	/** state to appropriate action mapping */
+	/** map from capability state into amazon store action */
 	public ConfigAction action() {
+
 		switch (this) {
+
 		case ADDED:
 			return ConfigAction.SKIP;
+
 		case ENABLED:
 			return ConfigAction.FAIL;
+
 		case ACTIVATED:
 			return ConfigAction.WORK;
+
 		case PASSIVATED:
 			return ConfigAction.FAIL;
+
 		case DISABLED:
 			return ConfigAction.SKIP;
+
 		case REMOVED:
 			return ConfigAction.SKIP;
+
 		default:
 			return ConfigAction.FAIL;
+
 		}
+
 	}
 
 }

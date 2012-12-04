@@ -28,12 +28,12 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 
 //@Named(AmazonServiceProvider.NAME)
-public class AmazonServiceProvider implements AmazonService {
+public class zAmazonServiceProvider implements zAmazonService {
 
 	public static final String NAME = "carrot.amazon.service";
 
 	@Inject
-	protected AmazonConfig amazonConfig;
+	protected zAmazonConfig amazonConfig;
 
 	private final Runnable healtTask = new Runnable() {
 		@Override

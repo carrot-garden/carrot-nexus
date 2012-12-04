@@ -21,6 +21,9 @@ import org.sonatype.sisu.goodies.eventbus.EventBus;
 import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 import com.google.common.eventbus.Subscribe;
 
+/**
+ * provides exploded capability list per repository
+ */
 @Named
 @Singleton
 public class ConfigRegistry {
@@ -41,25 +44,18 @@ public class ConfigRegistry {
 		this.registry = registry;
 		this.eventBus = eventBus;
 
-		eventBus.register(this);
-
-		log.info("\n\t ### init");
+		this.eventBus.register(this);
 
 	}
 
 	@Subscribe
 	public void handle(final ConfigEntry configEntry) {
 
-		log.info("\n\t ### configEntry : {} / {}", configEntry.configId(),
-				configEntry.configState());
-
-		final String comboId = configEntry.comboId();
+		final String comboId = configEntry.repoId();
 
 		final List<String> repoList = Util.repoList(registry, comboId);
 
 		for (final String repoId : repoList) {
-
-			log.info("\n\t ### comboId={} repoId={}", comboId, repoId);
 
 			final ConfigEntryMap entryMap = entryMap(repoId);
 

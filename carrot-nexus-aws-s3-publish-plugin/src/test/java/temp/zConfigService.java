@@ -9,7 +9,7 @@ package temp;
 
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
 
-public interface ConfigService {
+public interface zConfigService {
 
 	void configAdd(final ConfigBean config);
 

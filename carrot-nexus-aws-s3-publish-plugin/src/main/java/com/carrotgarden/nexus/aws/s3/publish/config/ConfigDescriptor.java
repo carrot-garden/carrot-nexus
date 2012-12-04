@@ -8,8 +8,10 @@
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import java.lang.reflect.Constructor;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -25,9 +27,12 @@ import org.sonatype.nexus.plugins.capabilities.support.CapabilityDescriptorSuppo
 
 import com.carrotgarden.nexus.aws.s3.publish.util.Util;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigValue;
 
 /**
- * config gui design
+ * capability UI form design
+ * <p>
+ * see ./src/main/resources/reference.conf
  */
 @Singleton
 @Named(ConfigBean.NAME)
@@ -37,19 +42,35 @@ public class ConfigDescriptor extends CapabilityDescriptorSupport implements
 	protected final static Logger log = LoggerFactory
 			.getLogger(ConfigDescriptor.class);
 
+	/** order by position in reference.conf */
+	public static final Comparator<Entry<String, ConfigValue>> //
+	comparator = new Comparator<Entry<String, ConfigValue>>() {
+		@Override
+		public int compare( //
+				final Entry<String, ConfigValue> o1, //
+				final Entry<String, ConfigValue> o2 //
+		) {
+			final int n1 = o1.getValue().origin().lineNumber();
+			final int n2 = o2.getValue().origin().lineNumber();
+			return n1 == n2 ? 0 : (n1 > n2 ? 1 : -1);
+		}
+	};
+
 	public static FormField[] capaFields() {
 
 		final List<FormField> fieldList = new LinkedList<FormField>();
 
-		final Config config = Util.reference().getConfig("form-field");
+		final Config configForm = Util.reference().getConfig("form-field");
 
-		final Set<String> keySet = config.root().keySet();
+		final Set<Entry<String, ConfigValue>> entrySet = //
+		new TreeSet<Entry<String, ConfigValue>>(comparator);
 
-		final TreeSet<String> treeSet = new TreeSet<String>(keySet);
+		entrySet.addAll(configForm.root().entrySet());
 
-		for (final String configId : treeSet) {
+		for (final Entry<String, ConfigValue> entry : entrySet) {
 
-			final Config configField = config.getConfig(configId);
+			final String configId = entry.getKey();
+			final Config configField = configForm.getConfig(configId);
 
 			final FormField formField = makeField(configId, configField);
 

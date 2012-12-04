@@ -7,6 +7,8 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.util;
 
+import static com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute.*;
+
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -28,7 +30,6 @@ import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.nexus.proxy.storage.local.LocalRepositoryStorage;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
-import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -95,8 +96,6 @@ public class Util {
 			return true;
 		}
 
-		log.info("path={} file={}", path, file);
-
 		final boolean isSaved = amazonService.save(path, file);
 
 		if (isSaved) {
@@ -111,11 +110,8 @@ public class Util {
 				final Attributes attributes = attributeStorage
 						.getAttributes(uid);
 
-				attributes.put(CarrotAttribute.ATTR_IS_SAVED,
-						CarrotAttribute.ATTR_TRUE_VALUE);
-
-				attributes.put(CarrotAttribute.ATTR_SAVE_TIME,
-						"" + System.currentTimeMillis());
+				attributes.put(ATTR_IS_SAVED, "true");
+				attributes.put(ATTR_SAVE_TIME, "" + System.currentTimeMillis());
 
 				attributeStorage.putAttributes(uid, attributes);
 
@@ -127,13 +123,9 @@ public class Util {
 
 			}
 
-			log.info("save success : path={}", path);
-
 			return true;
 
 		} else {
-
-			log.error("save failure : path={}", path);
 
 			return false;
 
@@ -247,6 +239,18 @@ public class Util {
 		}
 
 		return list;
+
+	}
+
+	public static Map<String, String> jsonFrom(final File file)
+			throws Exception {
+
+		final ObjectMapper mapper = new ObjectMapper();
+
+		@SuppressWarnings("unchecked")
+		final Map<String, String> map = mapper.readValue(file, Map.class);
+
+		return map;
 
 	}
 
