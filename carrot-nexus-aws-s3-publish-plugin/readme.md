@@ -82,7 +82,7 @@ will be re-created again on nexus restart;
 
 ### troubleshoot
 
-* remember to click "Enabled" check box and "Save" after you supplied your credentials
+* remember to select "Enabled" check box and do "Save" after you supplied your credentials
 * navigate and refresh : ```Nexus -> Views -> System Feeds -> Error and Warning Events```
 * verify state of "Active" check box and pay attention to message there, if any
 * click "Refresh" to see if "Active" state changed
