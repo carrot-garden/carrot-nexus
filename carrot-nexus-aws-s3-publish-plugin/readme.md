@@ -30,11 +30,28 @@ maven central has
 
 ### install
 
-unzip plugin distro in the plugin folder of your nexus, then restart
+
 ``` 
-cd ${nexus-home}/sonatype-work/nexus/plugin-repository
-wget http://repo1.maven.org/maven2/com/carrotgarden/nexus/plugins/carrot-nexus-aws-s3-publish-plugin/2.2.1-build001/carrot-nexus-aws-s3-publish-plugin-2.2.1-build001-bundle.zip
-unzip carrot-nexus-aws-s3-publish-plugin-2.2.1-build001-bundle.zip
+#!/bin/bash
+
+#
+# unzip plugin distro into the plugins folder of your nexus, and then restart servivce:
+#
+
+# nexus work folder
+NEXUS="/var/lib/nexus"
+
+# current plugin version
+VERSION="2.2.1-build001"
+
+cd $NEXUS/sonatype-work/nexus/plugin-repository
+
+wget http://repo1.maven.org/maven2/com/carrotgarden/nexus/plugins/carrot-nexus-aws-s3-publish-plugin/$VERSION/carrot-nexus-aws-s3-publish-plugin-$VERSION-bundle.zip
+
+unzip carrot-nexus-aws-s3-publish-plugin-$VERSION-bundle.zip
+
+service nexus restart
+
 ```
 
 ### configure
