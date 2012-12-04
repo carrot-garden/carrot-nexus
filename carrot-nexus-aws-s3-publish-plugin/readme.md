@@ -24,14 +24,14 @@ which ensures that pre-existing artifacts are also published;
 
 finally, when plug-in is **enabled** and amazon s3 bucket becomes unavailable for any reason,
 you will not be able to deploy or cache any artifacts in the affected/configured repositories,
-until that bucket becomes available again; availability bucket status is checked periodically;
+until that bucket becomes available again; bucket availability status is checked periodically;
 
 ### repo
 
 maven central has
 [latest version of the plugin]
 (http://search.maven.org/#search%7Cga%7C1%7Ccarrot-nexus-aws-s3-publish-plugin)
-and you are looking for ```bundle.zip``` artifact;
+and you are looking for the ```bundle.zip``` artifact;
 
 ### nexus
 
@@ -46,7 +46,7 @@ of the currently downloaded plug-in bundle;
 ``` 
 #!/bin/bash
 #
-# unzip plugin bundle into the plugins folder of your nexus, and then restart service:
+# unzip plugin bundle into the plugins folder, and then restart the service:
 #
 # nexus work folder
 NEXUS="/var/lib/nexus"
@@ -68,19 +68,22 @@ service nexus restart
 
 ### configure
 
-plug-in installs **default configuration** under
+plug-in installs **default configuration** under:
 ```
 Nexus -> Administration -> Capabilities
 ``` 
 
-which needs be configured with your amazon credentials, email address, etc.
+which needs be configured with your amazon credentials, email address, etc.;
+if you delete all plugin configurations, default configuration 
+will be re-created again on nexus restart;
 
-![default config]
+![default config screen]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-01.png)
 
 ### troubleshoot
 
 * remember to click "Enabled" check box and "Save" after you supplied your credentials
+* navigate and refresh : ```Nexus -> Views -> System Feeds -> Errors and Warning Events```
 * verify state of "Active" check box and pay attention to message there, if any
 * click "Refresh" to see if "Active" state changed
 * reduce health check period to see changes sooner
