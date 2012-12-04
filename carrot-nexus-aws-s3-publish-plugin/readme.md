@@ -45,7 +45,7 @@ REPO="http://repo1.maven.org/maven2"
 GROUP="com/carrotgarden/nexus"
 ARTIFACT="carrot-nexus-aws-s3-publish-plugin"
 PLUGIN_BUNDLE="$ARTIFACT-$VERSION-bundle.zip"
-URL="$REPO/$GROUP/$NAME/$VERSION/$PLUGIN_BUNDLE"
+URL="$REPO/$GROUP/$ARTIFACT/$VERSION/$PLUGIN_BUNDLE"
 #
 cd $NEXUS/sonatype-work/nexus/plugin-repository
 wget $URL 
