@@ -27,6 +27,7 @@ which ensures that pre-existing artifacts are also published;
 maven central has
 [latest version of the plugin]
 (http://search.maven.org/#search%7Cga%7C1%7Ccarrot-nexus-aws-s3-publish-plugin)
+and you are looking for ```bundle.zip``` artifact;
 
 ### install
 
@@ -66,7 +67,7 @@ which needs be configured with your amazon credentials, email address, etc.
 ![default config]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-01.png)
 
-### troubleshooting
+### troubleshoot
 
 * remember to click "Enabled" check box and "Save" after you supplied your credentials
 * verify state of "Active" check box and pay attention to message there, if any
