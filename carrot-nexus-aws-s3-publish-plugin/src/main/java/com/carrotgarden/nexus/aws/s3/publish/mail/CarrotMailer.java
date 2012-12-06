@@ -20,8 +20,8 @@ import org.sonatype.nexus.email.NexusEmailer;
 
 /** 
  */
-@Named(CarrotMailer.NAME)
 @Singleton
+@Named(CarrotMailer.NAME)
 public class CarrotMailer {
 
 	public static final String NAME = "carrot.mailer";

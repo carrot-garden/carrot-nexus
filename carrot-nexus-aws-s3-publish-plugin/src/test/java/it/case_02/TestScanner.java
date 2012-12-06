@@ -9,10 +9,15 @@ package it.case_02;
 
 import static org.junit.Assert.*;
 import it.any.TestAny;
+import it.util.TestHelp;
 
 import java.io.File;
+import java.util.Map;
 
+import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
+
+import com.carrotgarden.nexus.aws.s3.publish.config.Form;
 
 public class TestScanner extends TestAny {
 
@@ -23,7 +28,13 @@ public class TestScanner extends TestAny {
 	@Test
 	public void testScanner() throws Exception {
 
-		applyConfigCustom();
+		/** ensure 3 second scanner period */
+		final Map<String, String> props = Form.propsFrom(TestHelp.configFile());
+		props.put("combo-id", repoId());
+		props.put("enable-scanner", "true");
+		props.put("scanner-schedule", "0/3 * * * * ? *");
+
+		applyConfig(true, props);
 
 		testScanner("scanner/scanner/1.0/scanner-1.0.pom");
 
@@ -31,13 +42,26 @@ public class TestScanner extends TestAny {
 
 	private void testScanner(final String path) throws Exception {
 
+		assertTrue("amazon delete", amazonService().kill(path));
+
 		final File source = fileSource(path);
 		final File target = fileTarget(path);
 		final File attrib = fileAttrib(path);
 
-		assertFalse("source present", source.exists());
+		assertTrue("source present", source.exists());
 		assertFalse("target missing", target.exists());
 		assertFalse("attrib missing", attrib.exists());
+
+		FileUtils.copyFile(source, target);
+
+		assertTrue("target present", target.exists());
+
+		/** wait for more then 2x3 seconds */
+		inspector().waitForCalmPeriod(7 * 1000);
+
+		final File amazon = fileTransient();
+
+		assertTrue("amazon retrieve", amazonService().load(path, amazon));
 
 	}
 

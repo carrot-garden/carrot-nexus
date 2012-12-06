@@ -8,6 +8,7 @@
 package com.carrotgarden.nexus.aws.s3.publish.task;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -15,14 +16,16 @@ import javax.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.scheduling.NexusScheduler;
+import org.sonatype.nexus.scheduling.NexusTask;
 import org.sonatype.scheduling.ScheduledTask;
 import org.sonatype.scheduling.schedules.CronSchedule;
 import org.sonatype.scheduling.schedules.Schedule;
 
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
+import com.carrotgarden.nexus.aws.s3.publish.metrics.BaseReporter;
+import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.task.ScannerTask.ConfigType;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
-import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Counter;
 
 /**
@@ -33,15 +36,27 @@ public class TaskManager {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final NexusScheduler taskScheduler;
+	private final BaseReporter reporter;
+	private final NexusScheduler scheduler;
+
+	private final Counter metricsEnsureCount;
 
 	@Inject
 	public TaskManager(//
-			final NexusScheduler taskScheduler //
+			final BaseReporter reporter, //
+			final NexusScheduler scheduler //
 	) {
 
-		this.taskScheduler = taskScheduler;
+		this.reporter = reporter;
+		this.scheduler = scheduler;
 
+		metricsEnsureCount = this.reporter
+				.newCounter("number of times tasks have being configured");
+
+	}
+
+	public Reporter reporter() {
+		return reporter;
 	}
 
 	private void cancel(final String configId, final ConfigType configType) {
@@ -65,7 +80,7 @@ public class TaskManager {
 				"form-field-bundle.scanner-schedule.default-value");
 	}
 
-	private CronSchedule defaultSchedule() {
+	private CronSchedule scheduleDefault() {
 		try {
 			return new CronSchedule(defaultPattern());
 		} catch (final Exception e) {
@@ -79,15 +94,21 @@ public class TaskManager {
 
 		ScannerTask task = findTask(configId, configType);
 
+		final boolean isNew;
+		if (task == null) {
+			isNew = true;
+			task = newInstance(configId, configType);
+		} else {
+			isNew = false;
+		}
+
+		final ScheduledTask<?> reference;
+
 		switch (configType) {
 
 		case ON_DEMAND:
 
-			if (task == null) {
-				task = newInstance(configId, configType);
-			}
-
-			taskScheduler.submit(task.name(), task);
+			reference = scheduler.submit(task.getName(), task);
 
 			break;
 
@@ -95,14 +116,12 @@ public class TaskManager {
 
 			final Schedule schedule = schedule(configBean.scannerSchedule());
 
-			if (task == null) {
-				task = newInstance(configId, configType);
-				taskScheduler.schedule(task.name(), task, schedule);
+			if (isNew) {
+				reference = scheduler.schedule(task.getName(), task, schedule);
 			} else {
-				final ScheduledTask<?> reference = //
-				findReference(configId, configType);
+				reference = findReference(configId, configType);
 				reference.setSchedule(schedule);
-				taskScheduler.updateSchedule(reference);
+				scheduler.updateSchedule(reference);
 				reference.reset();
 			}
 
@@ -113,18 +132,15 @@ public class TaskManager {
 			return;
 		}
 
-	}
+		final Map<String, String> params = task.getParameters();
 
-	private void sleep() {
-		try {
-			Thread.sleep(1 * 1000);
-		} catch (final InterruptedException e) {
-			//
-		}
-	}
+		/** see https://issues.sonatype.org/browse/NEXUS-5428 */
+		params.put(NexusTask.ID_KEY, reference.getId());
 
-	private final Counter metricsEnsureCount = Metrics.newCounter(getClass(),
-			"number of times tasks have being configured");
+		/** so nexus will send email on task failure */
+		params.put(NexusTask.ALERT_EMAIL_KEY, configBean.emailAddress());
+
+	}
 
 	public void ensureTasks(final String configId, final ConfigBean configBean) {
 
@@ -143,6 +159,8 @@ public class TaskManager {
 	}
 
 	public void report(final StringBuilder text, final String configId) {
+
+		reporter.report(text, "task manager");
 
 		report(text, configId, ConfigType.ON_DEMAND);
 		report(text, configId, ConfigType.SCHEDULED);
@@ -168,7 +186,7 @@ public class TaskManager {
 			final ScannerTask.ConfigType configType) {
 
 		final List<ScheduledTask<?>> referenceList = //
-		taskScheduler.getAllTasks().get(ScannerTask.NAME);
+		scheduler.getAllTasks().get(ScannerTask.NAME);
 
 		if (referenceList == null) {
 			return null;
@@ -204,12 +222,12 @@ public class TaskManager {
 	private ScannerTask newInstance(final String configId,
 			final ConfigType configType) {
 
-		final ScannerTask task = taskScheduler
+		final ScannerTask task = scheduler
 				.createTaskInstance(ScannerTask.class);
 
 		final String name = ScannerTask.taskNameRule(configId, configType);
+		task.getParameters().put(NexusTask.NAME_KEY, name);
 
-		task.name(name);
 		task.configId(configId);
 		task.configType(configType);
 
@@ -221,7 +239,7 @@ public class TaskManager {
 			return new CronSchedule(pattern);
 		} catch (final Exception e) {
 			log.error("invalid schedule, using default", e);
-			return defaultSchedule();
+			return scheduleDefault();
 		}
 	}
 

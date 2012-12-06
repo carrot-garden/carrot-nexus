@@ -29,4 +29,7 @@ public interface Reporter {
 	/** produce report on demand and append to text */
 	void report(StringBuilder text, String title);
 
+	/** reset all metrics in registry */
+	public void reset();
+
 }

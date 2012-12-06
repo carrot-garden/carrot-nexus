@@ -29,7 +29,7 @@ public class AmazonReporter extends BaseReporter {
 	public final Counter requestCheckCount;
 	public final Counter requestFailedCount;
 	public final Counter publishedFileSize;
-	public final PeekBooleanGuage providerAvailable = new PeekBooleanGuage();
+	public final PeekValueGuage<Boolean> providerAvailable = new PeekValueGuage<Boolean>();
 
 	@Inject
 	public AmazonReporter( //

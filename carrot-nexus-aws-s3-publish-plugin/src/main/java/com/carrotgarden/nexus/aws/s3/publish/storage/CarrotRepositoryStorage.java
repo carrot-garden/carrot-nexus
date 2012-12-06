@@ -33,6 +33,7 @@ import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntryList;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigResolver;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigState;
+import com.carrotgarden.nexus.aws.s3.publish.mail.CarrotMailer;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.StorageReporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
 import com.yammer.metrics.Metrics;
@@ -57,9 +58,11 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 	private final ConfigResolver resolver;
 	private final StorageReporter reporter;
+	private final CarrotMailer mailer;
 
 	@Inject
 	public CarrotRepositoryStorage( //
+			final CarrotMailer mailer, //
 			// final StorageReporter reporter, //
 			final ConfigResolver resolver, //
 			final Wastebasket wastebasket, //
@@ -70,6 +73,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 		super(wastebasket, linkPersister, mimeSupport, fsPeer);
 
+		this.mailer = mailer;
 		this.resolver = resolver;
 		this.reporter = new StorageReporter(Metrics.defaultRegistry());
 
@@ -135,6 +139,8 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 						reporter.amazonPublishedFileSize.inc(file.length());
 						continue;
 					} else {
+						// TODO
+						// mailer.send(email, subject, message);
 						break;
 					}
 

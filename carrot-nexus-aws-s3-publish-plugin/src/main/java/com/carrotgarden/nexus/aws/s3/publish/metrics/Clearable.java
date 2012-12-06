@@ -5,10 +5,10 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package it.util;
+package com.carrotgarden.nexus.aws.s3.publish.metrics;
 
-public interface Ready {
+public interface Clearable {
 
-	boolean isReady();
+	void clear();
 
 }

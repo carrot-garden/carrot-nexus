@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
-	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
-<!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
-	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
+<!--
+
+    Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
+
+    All rights reserved. Licensed under the OSI BSD License.
+
+    http://www.opensource.org/licenses/bsd-license.php
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
@@ -43,7 +48,7 @@
 			<version>1.0.0</version>
 		</dependency>
 
-		<!-- stats -->
+		<!-- metrics -->
 		<dependency>
 			<groupId>com.yammer.metrics</groupId>
 			<artifactId>metrics-core</artifactId>
@@ -66,13 +71,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
-		<!-- cache -->
-		<!-- <dependency> -->
-		<!-- <groupId>com.google.guava</groupId> -->
-		<!-- <artifactId>guava</artifactId> -->
-		<!-- <version>13.0.1</version> -->
-		<!-- </dependency> -->
 
 		<!-- amazon -->
 		<dependency>
@@ -239,28 +237,6 @@
 				</dependencies>
 			</plugin>
 
-			<!-- plexus container injection metadata; need only if using non JSR 330 
-				javax.inject annotations -->
-			<!-- <plugin> -->
-			<!-- <groupId>org.codehaus.plexus</groupId> -->
-			<!-- <artifactId>plexus-component-metadata</artifactId> -->
-			<!-- <version>1.5.5</version> -->
-			<!-- <executions> -->
-			<!-- <execution> -->
-			<!-- <id>process-classes</id> -->
-			<!-- <goals> -->
-			<!-- <goal>generate-metadata</goal> -->
-			<!-- </goals> -->
-			<!-- </execution> -->
-			<!-- <execution> -->
-			<!-- <id>process-test-classes</id> -->
-			<!-- <goals> -->
-			<!-- <goal>generate-test-metadata</goal> -->
-			<!-- </goals> -->
-			<!-- </execution> -->
-			<!-- </executions> -->
-			<!-- </plugin> -->
-
 		</plugins>
 
 		<pluginManagement>
@@ -332,32 +308,12 @@
 								<classifier>bundle</classifier>
 							</nexusBundleArtifact>
 							<nexusPluginsArtifacts>
-								<!-- <plugin> -->
-								<!-- <groupId>org.sonatype.nexus</groupId> -->
-								<!-- <artifactId>nexus-it-helper-plugin</artifactId> -->
-								<!-- <version>${nexus.version}</version> -->
-								<!-- <classifier>cp</classifier> -->
-								<!-- <type>jar</type> -->
-								<!-- </plugin> -->
-								<!-- <plugin> -->
-								<!-- <groupId>org.sonatype.nexus</groupId> -->
-								<!-- <artifactId>nexus-it-helper-plugin</artifactId> -->
-								<!-- <version>${nexus.version}</version> -->
-								<!-- <classifier>bundle</classifier> -->
-								<!-- <type>zip</type> -->
-								<!-- </plugin> -->
-								<!-- <jar> -->
-								<!-- <groupId>org.sonatype.security.realms</groupId> -->
-								<!-- <artifactId>security-url-realm</artifactId> -->
-								<!-- </jar> -->
 							</nexusPluginsArtifacts>
 						</configuration>
 						<executions>
 							<execution>
 								<goals>
-									<!-- <goal>setup-environment</goal> -->
 									<goal>setup-nexus-plugin-environment</goal>
-									<!-- <goal>package</goal> -->
 								</goals>
 							</execution>
 						</executions>

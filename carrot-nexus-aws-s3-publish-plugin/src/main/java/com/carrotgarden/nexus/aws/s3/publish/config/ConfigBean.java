@@ -53,6 +53,10 @@ public class ConfigBean {
 		return asString("combo-id");
 	}
 
+	public String emailAddress() {
+		return asString("email-address");
+	}
+
 	public boolean enableEmail() {
 		return asBoolean("enable-email");
 	}

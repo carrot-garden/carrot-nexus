@@ -7,6 +7,7 @@
     http://www.opensource.org/licenses/bsd-license.php
 
 -->
+<!-- NOT IN USE -->
 <project default="maven" basedir="./..">
 
 	<echo message="basedir : ${basedir}" />
@@ -20,7 +21,7 @@
 			<os family="windows" />
 		</condition>
 
-		<exec executable="${executable}" >
+		<exec executable="${executable}">
 
 			<arg value="clean" />
 			<arg value="verify" />

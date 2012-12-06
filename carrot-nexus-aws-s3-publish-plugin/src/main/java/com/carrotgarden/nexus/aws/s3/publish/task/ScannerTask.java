@@ -38,6 +38,7 @@ import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigCapability;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
+import com.carrotgarden.nexus.aws.s3.publish.mail.CarrotMailer;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.TaskReporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
@@ -49,20 +50,24 @@ import com.google.common.base.Throwables;
 import com.yammer.metrics.core.Gauge;
 
 /**
+ * scan repository an publish files to amazon
  */
 @Named(ScannerTask.NAME)
 public class ScannerTask extends AbstractNexusTask<Object> {
 
 	public enum ConfigType {
-		/** task must run on configuration change */
+
+		/** a task must run on a configuration change */
 		ON_DEMAND, //
-		/** task must run on schedule, re-set after configuration change */
+
+		/** a task must run on provided schedule */
 		SCHEDULED, //
+
 	}
 
+	/** persistent task binding to owner capability */
 	private static final String KEY_CONFIG_ID = "scanner.task.config-id";
 	private static final String KEY_CONFIG_TYPE = "scanner.task.config-type";
-	private static final String KEY_NAME = "scanner.task.name";
 
 	public static final String NAME = "ScannerTask";
 
@@ -88,39 +93,43 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final RepositoryRegistry repoRegistry;
-
 	private final Scanner scanner;
-
 	private final TaskReporter reporter;
-
-	private NexusScheduler scheduler;
+	private final NexusScheduler scheduler;
+	private final CarrotMailer mailer;
 
 	@Inject
 	public ScannerTask( //
+			final CarrotMailer mailer, //
 			final TaskReporter reporter, //
 			final NexusScheduler scheduler, //
 			@Named("serial") final Scanner scanner, //
 			final CapabilityRegistry capaRegistry, //
 			final RepositoryRegistry repoRegistry //
 	) {
-
+		this.mailer = mailer;
 		this.scheduler = scheduler;
 		this.reporter = reporter;
 		this.scanner = scanner;
 		this.capaRegistry = capaRegistry;
 		this.repoRegistry = repoRegistry;
 
-		reporter.registry().newGauge(getClass(), "current task state",
-				new Gauge<String>() {
-					@Override
-					public String value() {
-						return taskState();
-					}
-				});
+		reporter.newGauge("task name", new Gauge<String>() {
+			@Override
+			public String value() {
+				return getName();
+			}
+		});
+		reporter.newGauge("task state", new Gauge<String>() {
+			@Override
+			public String value() {
+				return getState();
+			}
+		});
 
 	}
 
-	private String taskState() {
+	private String getState() {
 		try {
 			final ScheduledTask<?> reference = //
 			TaskHelp.reference(scheduler, this);
@@ -173,7 +182,7 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 
 	private void doWork() throws Exception {
 
-		// TODO reset reporter
+		reporter.reset();
 
 		if (shouldYield()) {
 			log.info("yielding to priority tasks");
@@ -242,6 +251,8 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 							return;
 						}
 
+						reporter.repoFileSize.inc(file.length());
+
 						final ResourceStoreRequest request = //
 						new ResourceStoreRequest(path);
 
@@ -307,6 +318,9 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 
 			log.info("\n{}", report);
 
+			// TODO
+			// mailer.send(email, subject, message);
+
 		}
 
 	}
@@ -348,20 +362,12 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 
 	@Override
 	protected String getAction() {
-		return "scanner";
+		return "scan";
 	}
 
 	@Override
 	protected String getMessage() {
-		return name();
-	}
-
-	public String name() {
-		return getParameters().get(KEY_NAME);
-	}
-
-	public void name(final String name) {
-		getParameters().put(KEY_NAME, name);
+		return getName();
 	}
 
 	public long scannerFailureSleepTime() {

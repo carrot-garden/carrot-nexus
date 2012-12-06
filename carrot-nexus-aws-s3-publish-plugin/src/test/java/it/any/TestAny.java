@@ -177,16 +177,16 @@ public abstract class TestAny extends NexusRunningITSupport {
 	}
 
 	/** configuration with amazon access */
-	protected void applyConfigCustom() throws Exception {
+	protected void applyConfigCustom(final boolean enable) throws Exception {
 
-		applyConfig(true, Form.propsFrom(TestHelp.configFile()));
+		applyConfig(enable, Form.propsFrom(TestHelp.configFile()));
 
 	}
 
 	/** default configuration with NO amazon access */
-	protected void applyConfigDefault() throws Exception {
+	protected void applyConfigDefault(final boolean enable) throws Exception {
 
-		applyConfig(false, Form.propsDefault());
+		applyConfig(enable, Form.propsDefault());
 
 	}
 

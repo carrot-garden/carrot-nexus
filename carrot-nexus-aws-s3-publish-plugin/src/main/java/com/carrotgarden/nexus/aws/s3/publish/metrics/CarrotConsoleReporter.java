@@ -19,6 +19,8 @@ import com.yammer.metrics.reporting.ConsoleReporter;
 
 /**
  * simplified console renderer
+ * <p>
+ * TODO https://github.com/codahale/metrics/issues/316
  */
 public class CarrotConsoleReporter extends ConsoleReporter {
 

@@ -28,14 +28,14 @@ public class TestDeploy extends TestAny {
 	@Test
 	public void testActivate() throws Exception {
 
-		applyConfigDefault();
+		applyConfigDefault(false);
 
 		final CapabilityListItemResource entry1 = resourceEntry();
 
 		assertFalse("plugin is disabled", entry1.isEnabled());
 		assertFalse("plugin is passivated", entry1.isActive());
 
-		applyConfigCustom();
+		applyConfigCustom(true);
 
 		final CapabilityListItemResource entry2 = resourceEntry();
 
@@ -47,7 +47,7 @@ public class TestDeploy extends TestAny {
 	@Test
 	public void testDeploySkip() throws Exception {
 
-		applyConfigDefault();
+		applyConfigDefault(false);
 
 		final CapabilityListItemResource entry = resourceEntry();
 
@@ -94,7 +94,7 @@ public class TestDeploy extends TestAny {
 	@Test
 	public void testDeployWork() throws Exception {
 
-		applyConfigCustom();
+		applyConfigCustom(true);
 
 		testDeployWork("junit/junit/3.8.1/junit-3.8.1.pom");
 		testDeployWork("junit/junit/3.8.1/junit-3.8.1.jar");

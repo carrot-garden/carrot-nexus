@@ -10,17 +10,22 @@ package com.carrotgarden.nexus.aws.s3.publish.metrics;
 import com.yammer.metrics.core.Gauge;
 
 /** inverse gauge */
-public class PeekBooleanGuage extends Gauge<Boolean> {
+public class PeekValueGuage<T> extends Gauge<T> implements Clearable {
 
-	private boolean value;
+	private T value;
 
 	@Override
-	public Boolean value() {
+	public T value() {
 		return value;
 	}
 
-	public void value(final boolean value) {
+	public void value(final T value) {
 		this.value = value;
+	}
+
+	@Override
+	public void clear() {
+		value = null;
 	}
 
 }

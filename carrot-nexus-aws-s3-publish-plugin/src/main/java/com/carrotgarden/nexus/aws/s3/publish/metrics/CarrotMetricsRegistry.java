@@ -13,8 +13,15 @@ import com.yammer.metrics.core.MetricsRegistry;
 
 /**
  * multiton for injection
+ * <p>
+ * TODO https://github.com/codahale/metrics/issues/317
  */
 @Named("reporter")
-public class CarrotMetricsRegistry extends MetricsRegistry {
+public class CarrotMetricsRegistry extends MetricsRegistry implements Clearable {
+
+	@Override
+	public void clear() {
+
+	}
 
 }
