@@ -25,6 +25,13 @@
 	<version>2.2.1-build001-SNAPSHOT</version>
 	<packaging>nexus-plugin</packaging>
 
+	<scm>
+		<url>https://github.com/carrot-garden/carrot-nexus</url>
+		<connection>scm:git:git://github.com/carrot-garden/carrot-nexus.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/carrot-garden/carrot-nexus.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
 	<properties>
 
 		<pluginName>CarrotGarden AWS S3 Publish Plugin</pluginName>
@@ -32,9 +39,7 @@
 		<pluginSiteUrl>https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/readme.md</pluginSiteUrl>
 
 		<nexus.version>2.2.1</nexus.version>
-
 		<app-lifecycle.version>1.7</app-lifecycle.version>
-
 		<nexus-capabilities.version>2.1.1</nexus-capabilities.version>
 
 	</properties>
