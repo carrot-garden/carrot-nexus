@@ -10,13 +10,13 @@ package com.carrotgarden.nexus.aws.s3.publish.attribute;
 import java.io.File;
 import java.util.Map;
 
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 
 public class CarrotAttributeBean implements CarrotAttribute {
 
 	public static CarrotAttribute fromJson(final File file) throws Exception {
 
-		final Map<String, String> props = Util.jsonFrom(file);
+		final Map<String, String> props = ConfigHelp.jsonFrom(file);
 
 		return new CarrotAttributeBean(props);
 

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
 import org.sonatype.sisu.goodies.eventbus.EventBus;
 
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -26,7 +26,7 @@ import com.google.common.eventbus.Subscribe;
  */
 @Named
 @Singleton
-public class ConfigRegistry {
+public class ConfigResolver {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -36,7 +36,7 @@ public class ConfigRegistry {
 	private final EventBus eventBus;
 
 	@Inject
-	public ConfigRegistry( //
+	public ConfigResolver( //
 			final RepositoryRegistry registry, //
 			final EventBus eventBus //
 	) {
@@ -48,12 +48,14 @@ public class ConfigRegistry {
 
 	}
 
+	/** involve entry into repository */
 	@Subscribe
 	public void handle(final ConfigEntry configEntry) {
 
-		final String comboId = configEntry.repoId();
+		/** individual or group or virtual id */
+		final String comboId = configEntry.comboId();
 
-		final List<String> repoList = Util.repoList(registry, comboId);
+		final List<String> repoList = RepoHelp.repoList(registry, comboId);
 
 		for (final String repoId : repoList) {
 
@@ -79,6 +81,12 @@ public class ConfigRegistry {
 
 	}
 
+	/**
+	 * find repository servicing entries
+	 * 
+	 * @param repoId
+	 *            individual repository (not group, not virtual)
+	 */
 	public ConfigEntryList entryList(final String repoId) {
 
 		final ConfigEntryMap map = entryMap(repoId);
@@ -88,51 +96,6 @@ public class ConfigRegistry {
 		list.addAll(map.values());
 
 		return list;
-
-	}
-
-	/** cumulative action from all providers */
-	public ConfigAction action(final String repoId) {
-
-		final ConfigEntryList entryList = entryList(repoId);
-
-		if (entryList.isEmpty()) {
-			return ConfigAction.SKIP;
-		}
-
-		int countFail = 0;
-		int countWork = 0;
-		int countSkip = 0;
-
-		for (final ConfigEntry entry : entryList) {
-
-			switch (entry.configState().action()) {
-			case FAIL:
-				countFail++;
-				continue;
-			case WORK:
-				countWork++;
-				continue;
-			case SKIP:
-				countSkip++;
-				continue;
-			}
-
-		}
-
-		if (countFail > 0) {
-			return ConfigAction.FAIL;
-		}
-
-		if (countWork > 0) {
-			return ConfigAction.WORK;
-		}
-
-		if (countSkip > 0) {
-			return ConfigAction.SKIP;
-		}
-
-		throw new RuntimeException("logic error");
 
 	}
 

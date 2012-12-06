@@ -5,21 +5,10 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.config;
+package bench.assist;
 
-/**
- * plug-in life cycle states; mutually exclusive
- */
-public enum ConfigState {
+public interface PaymentFactory {
 
-	INIT, //
-
-	ADDED, //
-
-	ENABLED, //
-
-	DISABLED, //
-
-	REMOVED, //
+	public Payment create(String name);
 
 }

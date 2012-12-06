@@ -5,13 +5,8 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.config;
+package bench.assist;
 
-/** internal */
-public interface ConfigEnabler {
-
-	void onEnable();
-
-	void onDisable();
+public interface Payment {
 
 }

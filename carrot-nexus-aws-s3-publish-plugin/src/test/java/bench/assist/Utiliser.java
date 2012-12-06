@@ -5,12 +5,13 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.scanner;
+package bench.assist;
 
-import org.sonatype.nexus.proxy.repository.Repository;
+import javax.inject.Inject;
 
-public interface CarrotScanner {
+public class Utiliser {
 
-	void register(Repository repository);
+	@Inject
+	PaymentFactory factory;
 
 }

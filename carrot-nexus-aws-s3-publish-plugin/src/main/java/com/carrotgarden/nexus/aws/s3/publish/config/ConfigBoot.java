@@ -8,7 +8,6 @@
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 import javax.inject.Named;
@@ -26,7 +25,7 @@ import org.sonatype.sisu.goodies.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * provide default capability configuration on boot, only when missing
+ * provide default plug-in configuration on boot (only when missing)
  */
 @Named
 @Singleton
@@ -49,9 +48,10 @@ public class ConfigBoot implements EventBus.LoadOnStart {
 
 				final boolean isEnabled = false;
 
-				final String notes = "default config [ " + new Date() + " ]";
+				final String notes = "default config";
 
-				final Map<String, String> props = ConfigBean.defaultProps();
+				final Map<String, String> props = ConfigDescriptor
+						.propsDefault();
 
 				registry.add(type, isEnabled, notes, props);
 

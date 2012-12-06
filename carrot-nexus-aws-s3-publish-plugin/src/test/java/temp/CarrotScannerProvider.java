@@ -5,9 +5,9 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.scanner;
+package temp;
 
-import static com.carrotgarden.nexus.aws.s3.publish.util.Util.*;
+import static com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp.*;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +33,12 @@ import org.sonatype.sisu.resource.scanner.Scanner;
 import org.sonatype.sisu.resource.scanner.helper.ListenerSupport;
 
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
+import com.carrotgarden.nexus.aws.s3.publish.util.PathHelp;
+import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 
-@Singleton
-@Named(CarrotScannerProvider.NAME)
-public class CarrotScannerProvider implements CarrotScanner {
+//@Singleton
+//@Named(CarrotScannerProvider.NAME)
+class CarrotScannerProvider implements CarrotScanner {
 
 	private class ScannerTask extends ListenerSupport implements Runnable {
 
@@ -69,11 +70,11 @@ public class CarrotScannerProvider implements CarrotScanner {
 		@Override
 		public void onFile(final File file) {
 
-			final String path = rootFullPath(relativePath(root, file));
+			final String path = PathHelp.rootFullPath(PathHelp.relativePath(root, file));
 
-			if (isIgnoredPath(path)) {
-				return;
-			}
+			// if (isIgnoredPath(path)) {
+			// return;
+			// }
 
 			final ResourceStoreRequest request = new ResourceStoreRequest(path);
 
@@ -125,7 +126,7 @@ public class CarrotScannerProvider implements CarrotScanner {
 
 			try {
 
-				root = repoRoot(config, repository);
+				root = RepoHelp.repoRoot(config, repository);
 
 				scanner.scan(root, this);
 

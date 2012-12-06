@@ -7,15 +7,16 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.amazon;
 
-import org.sonatype.nexus.plugins.capabilities.Condition;
-
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
+import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 
 public interface AmazonManager {
 
-	Condition condition();
-
 	void config(ConfigBean config);
+
+	void ensure();
+
+	Reporter reporter();
 
 	void start();
 

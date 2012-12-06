@@ -29,41 +29,49 @@ import org.sonatype.nexus.proxy.storage.local.fs.FSPeer;
 import org.sonatype.nexus.proxy.wastebasket.Wastebasket;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
-import com.carrotgarden.nexus.aws.s3.publish.config.ConfigAction;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntryList;
-import com.carrotgarden.nexus.aws.s3.publish.config.ConfigRegistry;
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+import com.carrotgarden.nexus.aws.s3.publish.config.ConfigResolver;
+import com.carrotgarden.nexus.aws.s3.publish.config.ConfigState;
+import com.carrotgarden.nexus.aws.s3.publish.metrics.StorageReporter;
+import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
+import com.yammer.metrics.Metrics;
 
 /**
- * custom local store
+ * custom local/remote store
  * <p>
- * store both on local file system and on amazon bucket
+ * store both on local file system and on the amazon bucket
+ * <p>
+ * single file item can be stored to multiple buckets
  * <p>
  * fail if any store operation fails
  */
 @Singleton
-@Named(CarrotStorageProvider.NAME)
-public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
+@Named(CarrotRepositoryStorage.NAME)
+public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 		implements LocalRepositoryStorage {
 
 	public static final String NAME = "carrot.repo.storage";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	{
-		log.info("init " + NAME);
-	}
+	private final ConfigResolver resolver;
+	private final StorageReporter reporter;
 
 	@Inject
-	private ConfigRegistry configRegistry;
-
-	@Inject
-	public CarrotStorageProvider(final Wastebasket wastebasket,
-			final LinkPersister linkPersister, final MimeSupport mimeSupport,
-			final FSPeer fsPeer) {
+	public CarrotRepositoryStorage( //
+			// final StorageReporter reporter, //
+			final ConfigResolver resolver, //
+			final Wastebasket wastebasket, //
+			final LinkPersister linkPersister, //
+			final MimeSupport mimeSupport, //
+			final FSPeer fsPeer //
+	) {
 
 		super(wastebasket, linkPersister, mimeSupport, fsPeer);
+
+		this.resolver = resolver;
+		this.reporter = new StorageReporter(Metrics.defaultRegistry());
 
 	}
 
@@ -73,56 +81,70 @@ public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
 	}
 
 	@Override
-	public void storeItem(final Repository repository, final StorageItem item)
+	public void storeItem(final Repository repository, final StorageItem itemAny)
 			throws UnsupportedStorageOperationException, LocalStorageException {
 
-		final boolean isFileItem = item instanceof StorageFileItem;
+		final boolean isFileItem = itemAny instanceof StorageFileItem;
 
 		if (!isFileItem) {
-			super.storeItem(repository, item);
+			reporter.amazonIgnoredFileCount.inc();
+			super.storeItem(repository, itemAny);
 			return;
-		}
-
-		final String repoId = repository.getId();
-
-		log.info("\n\t ### repo-item {}::{}", repoId, item.getPath());
-
-		final ConfigAction action = configRegistry.action(repoId);
-
-		log.info("\n\t ### action : {}", action);
-
-		switch (action) {
-		case FAIL:
-			throw new LocalStorageException("amazon provider not ready");
-		case SKIP:
-			super.storeItem(repository, item);
-			return;
-		case WORK:
-			break;
 		}
 
 		try {
+
+			final String repoId = repository.getId();
+
+			final StorageFileItem item = (StorageFileItem) itemAny;
 
 			final ResourceStoreRequest request = item.getResourceStoreRequest();
 
 			final File file = getFileFromBase(repository, request);
 
+			reporter.repoFilePeek.add(file);
+
 			/** store local */
 
 			super.storeItem(repository, item);
 
-			/** store remote */
+			/** store all remote */
 
-			final ConfigEntryList entryList = configRegistry.entryList(repoId);
+			final String path = item.getPath();
+
+			final ConfigEntryList entryList = resolver.entryList(repoId);
 
 			boolean isSaved = true;
 
 			for (final ConfigEntry entry : entryList) {
 
-				final AmazonService amazonService = entry.amazonService();
+				if (ConfigState.ENABLED == entry.configState()) {
 
-				isSaved &= Util.storeItem(amazonService, repository,
-						(StorageFileItem) item, file, log);
+					if (entry.isExcluded(path)) {
+						reporter.amazonIgnoredFileCount.inc();
+						continue;
+					}
+
+					final AmazonService amazonService = entry.amazonService();
+
+					isSaved &= AmazonHelp.storeItem( //
+							amazonService, repository, item, file, log);
+
+					if (isSaved) {
+						reporter.amazonPublishedFileCount.inc();
+						reporter.amazonPublishedFileSize.inc(file.length());
+						continue;
+					} else {
+						break;
+					}
+
+				} else {
+
+					/** no stats */
+					continue;
+
+				}
+
 			}
 
 			if (isSaved) {
@@ -132,11 +154,14 @@ public class CarrotStorageProvider extends DefaultFSLocalRepositoryStorage
 			/** revert local */
 			super.shredItem(repository, request);
 
-			throw new LocalStorageException("amazon store failure");
+			throw new LocalStorageException("amazon provider failure");
 
 		} catch (final Exception e) {
-			log.error("store failure", e);
+
+			reporter.amazonFailedFileCount.inc();
+
 			throw new LocalStorageException(e);
+
 		}
 
 	}

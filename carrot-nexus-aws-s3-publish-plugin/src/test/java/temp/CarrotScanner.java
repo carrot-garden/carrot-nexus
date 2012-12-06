@@ -5,21 +5,12 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.config;
+package temp;
 
-/**
- * plug-in life cycle states; mutually exclusive
- */
-public enum ConfigState {
+import org.sonatype.nexus.proxy.repository.Repository;
 
-	INIT, //
+interface CarrotScanner {
 
-	ADDED, //
-
-	ENABLED, //
-
-	DISABLED, //
-
-	REMOVED, //
+	void register(Repository repository);
 
 }

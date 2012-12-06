@@ -7,30 +7,26 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
-import java.lang.reflect.Constructor;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map.Entry;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.formfields.FormField;
-import org.sonatype.nexus.formfields.StringTextFormField;
 import org.sonatype.nexus.plugins.capabilities.CapabilityDescriptor;
+import org.sonatype.nexus.plugins.capabilities.CapabilityType;
 import org.sonatype.nexus.plugins.capabilities.support.CapabilityDescriptorSupport;
 
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+import com.carrotgarden.nexus.aws.s3.publish.field.FieldUtil;
+import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValue;
+import com.typesafe.config.ConfigFactory;
 
 /**
- * capability UI form design
+ * plug-in configuration form UI design
  * <p>
  * see ./src/main/resources/reference.conf
  */
@@ -39,106 +35,96 @@ import com.typesafe.config.ConfigValue;
 public class ConfigDescriptor extends CapabilityDescriptorSupport implements
 		CapabilityDescriptor {
 
-	protected final static Logger log = LoggerFactory
-			.getLogger(ConfigDescriptor.class);
-
-	/** order by position in reference.conf */
-	public static final Comparator<Entry<String, ConfigValue>> //
-	comparator = new Comparator<Entry<String, ConfigValue>>() {
-		@Override
-		public int compare( //
-				final Entry<String, ConfigValue> o1, //
-				final Entry<String, ConfigValue> o2 //
-		) {
-			final int n1 = o1.getValue().origin().lineNumber();
-			final int n2 = o2.getValue().origin().lineNumber();
-			return n1 == n2 ? 0 : (n1 > n2 ? 1 : -1);
-		}
-	};
-
 	public static FormField[] capaFields() {
-
-		final List<FormField> fieldList = new LinkedList<FormField>();
-
-		final Config configForm = Util.reference().getConfig("form-field");
-
-		final Set<Entry<String, ConfigValue>> entrySet = //
-		new TreeSet<Entry<String, ConfigValue>>(comparator);
-
-		entrySet.addAll(configForm.root().entrySet());
-
-		for (final Entry<String, ConfigValue> entry : entrySet) {
-
-			final String configId = entry.getKey();
-			final Config configField = configForm.getConfig(configId);
-
-			final FormField formField = makeField(configId, configField);
-
-			fieldList.add(formField);
-
-		}
-
-		return fieldList.toArray(new FormField[0]);
-
+		return FieldUtil.fieldArray(formFieldBundle(), formFieldDefault());
 	}
 
 	public static String capaHelp() {
-		return Util.reference().getString("form-name.help-text");
+		return ConfigHelp.reference().getString("form-header.help-text");
 	}
 
 	public static String capaName() {
-		return Util.reference().getString("form-name.label");
+		return ConfigHelp.reference().getString("form-header.label");
 	}
 
-	public static FormField makeField(final String configId,
-			final Config configField) {
+	public static CapabilityType capaType() {
+		return ConfigBean.TYPE;
+	}
 
-		try {
+	public static Config formFieldBundle() {
+		return ConfigHelp.reference().getConfig("form-field-bundle");
+	}
 
-			final String type = configField.getString("type");
-			final String label = configField.getString("label");
-			final String helpLink = configField.getString("help-link");
-			final String helpText = configField.getString("help-text");
+	public static Config formFieldDefault() {
+		return ConfigHelp.reference().getConfig("form-field-default");
+	}
 
-			final String helpHref = "<a href='" + helpLink + "'>help-link</a>";
+	public static Map<String, String> propsDefault() {
 
-			final String help = helpHref + "<br>" + helpText;
+		final Config root = ConfigHelp.reference();
 
-			final ClassLoader loader = ConfigDescriptor.class.getClassLoader();
+		return propsFrom(root);
 
-			@SuppressWarnings("unchecked")
-			final Class<FormField> klaz = (Class<FormField>) Class.forName(
-					type, true, loader);
+	}
 
-			final Constructor<FormField> init = klaz.getDeclaredConstructor(
-					String.class, // id
-					String.class, // label
-					String.class, // help
-					boolean.class // required
-					);
+	public static Map<String, String> propsDefaultWithOverride(
+			final Map<String, String> source) {
 
-			final FormField formField = init.newInstance( //
-					configId, // id
-					label, // label
-					help, // help
-					true // required
-					);
+		final Map<String, String> fallback = propsDefault();
 
-			return formField;
+		final Map<String, String> target = new HashMap<String, String>();
 
-		} catch (final Exception e) {
+		for (final String key : fallback.keySet()) {
 
-			log.error("", e);
+			final String valueSource = source.get(key);
+			final String valueFallback = fallback.get(key);
 
-			return new StringTextFormField("invalid-id", "Ivalid Field",
-					configField.toString(), true);
+			if (valueSource == null || valueSource.length() == 0) {
+				target.put(key, valueFallback);
+			} else {
+				target.put(key, valueSource);
+			}
 		}
+
+		return target;
+
+	}
+
+	public static Map<String, String> propsFrom(final Config root) {
+
+		final Config config = root.getConfig("form-field-bundle");
+
+		final Map<String, String> props = new HashMap<String, String>();
+
+		final Set<String> keySet = config.root().keySet();
+
+		for (final String configId : keySet) {
+
+			final Config configField = config.getConfig(configId);
+
+			final String configValue = configField.getString("default-value");
+
+			ConfigBean.log.info("### {}={}", configId, configValue);
+
+			props.put(configId, configValue);
+
+		}
+
+		return props;
+
+	}
+
+	public static Map<String, String> propsFrom(final File file) {
+
+		final Config root = ConfigFactory.parseFile(file);
+
+		return propsFrom(root);
 
 	}
 
 	public ConfigDescriptor() {
 
-		super(ConfigBean.TYPE, capaName(), capaHelp(), capaFields());
+		super(capaType(), capaName(), capaHelp(), capaFields());
 
 	}
 

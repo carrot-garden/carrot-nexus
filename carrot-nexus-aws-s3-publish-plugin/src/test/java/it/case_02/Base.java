@@ -58,6 +58,7 @@ import org.sonatype.sisu.maven.bridge.support.ModelBuildingRequestBuilder;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonProvider;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
+import com.carrotgarden.nexus.aws.s3.publish.config.ConfigDescriptor;
 
 @NexusStartAndStopStrategy(EACH_TEST)
 public abstract class Base extends NexusRunningParametrizedITSupport {
@@ -114,7 +115,7 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 
 			final File file = configFile();
 
-			final Map<String, String> props = ConfigBean.propsFrom(file);
+			final Map<String, String> props = ConfigDescriptor.propsFrom(file);
 
 			final ConfigBean config = new ConfigBean(props);
 
@@ -177,14 +178,14 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 	/** configuration with amazon access */
 	protected void applyConfigCustom() throws Exception {
 
-		applyConfig(true, ConfigBean.propsFrom(configFile()));
+		applyConfig(true, ConfigDescriptor.propsFrom(configFile()));
 
 	}
 
 	/** configuration with NO amazon access */
 	protected void applyConfigDefault() throws Exception {
 
-		applyConfig(false, ConfigBean.defaultProps());
+		applyConfig(false, ConfigDescriptor.propsDefault());
 
 	}
 

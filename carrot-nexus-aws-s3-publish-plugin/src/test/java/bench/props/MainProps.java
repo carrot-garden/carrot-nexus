@@ -5,7 +5,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package bench;
+package bench.props;
 
 import java.io.File;
 import java.io.FileInputStream;

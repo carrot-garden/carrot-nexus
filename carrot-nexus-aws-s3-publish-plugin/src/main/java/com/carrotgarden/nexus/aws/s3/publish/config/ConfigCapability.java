@@ -7,18 +7,23 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
+import java.util.Date;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.plugins.capabilities.Capability;
+import org.sonatype.nexus.plugins.capabilities.CapabilityIdentity;
+import org.sonatype.nexus.plugins.capabilities.CapabilityRegistry;
 import org.sonatype.nexus.plugins.capabilities.Condition;
-import org.sonatype.nexus.plugins.capabilities.internal.condition.SatisfiedCondition;
-import org.sonatype.nexus.plugins.capabilities.internal.condition.UnsatisfiedCondition;
+import org.sonatype.nexus.plugins.capabilities.internal.condition.NexusIsActiveCondition;
 import org.sonatype.nexus.plugins.capabilities.support.CapabilitySupport;
-import org.sonatype.nexus.plugins.capabilities.support.condition.Conditions;
-import org.sonatype.nexus.plugins.capabilities.support.condition.RepositoryConditions;
+import org.sonatype.nexus.proxy.maven.gav.Gav;
+import org.sonatype.nexus.proxy.maven.gav.GavCalculator;
 import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
 import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.sisu.goodies.eventbus.EventBus;
@@ -27,45 +32,54 @@ import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonProvider;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.condition.ConditionFactory;
 import com.carrotgarden.nexus.aws.s3.publish.condition.ManagedCondition;
-import com.carrotgarden.nexus.aws.s3.publish.condition.ReportingCondition;
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
+import com.carrotgarden.nexus.aws.s3.publish.task.TaskManager;
+import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
+import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 
 /**
- * capability life cycle manager
+ * plug-in configuration life cycle manager
  */
 @Named(ConfigBean.NAME)
 public class ConfigCapability extends CapabilitySupport implements Capability,
-		ConfigEnabler, ConfigEntry {
+		ConfigEntry {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	@Inject
-	private ConfigRegistry configRegistry;
-
-	@Inject
-	private EventBus eventBus;
-
-	@Inject
-	private Conditions conditions;
-
-	@Inject
-	private RepositoryRegistry registry;
-
-	private final ReportingCondition conditionReporter;
-
+	private final Reporter reporter;
+	private final GavCalculator calculator;
+	private final EventBus eventBus;
+	private final CapabilityRegistry capaRegistry;
+	private final RepositoryRegistry repoRegistry;
+	private final TaskManager taskManager;
+	private final AmazonProvider amazonProvider;
 	private final ManagedCondition conditionRepoAll;
-
-	@Inject
-	private AmazonProvider amazonProvider;
+	private final NexusIsActiveCondition nexusCondition;
 
 	private volatile ConfigBean configBean;
-
 	private volatile ConfigState configState;
 
 	@Inject
-	public ConfigCapability(final ConditionFactory factory) {
+	public ConfigCapability( //
+			@Named("base") final Reporter reporter, //
+			@Named("maven2") final GavCalculator calculator, //
+			final CapabilityRegistry capaRegistry, //
+			final NexusIsActiveCondition nexusCondition, //
+			final AmazonProvider amazonProvider, //
+			final TaskManager scannerManager, //
+			final RepositoryRegistry repoRegistry, //
+			final EventBus eventBus, //
+			final ConditionFactory factory //
+	) {
 
-		conditionReporter = factory.reporting(this, false);
+		this.reporter = reporter;
+		this.calculator = calculator;
+		this.capaRegistry = capaRegistry;
+		this.nexusCondition = nexusCondition;
+		this.amazonProvider = amazonProvider;
+		this.taskManager = scannerManager;
+		this.repoRegistry = repoRegistry;
+		this.eventBus = eventBus;
 
 		conditionRepoAll = factory.managed("repo-all");
 
@@ -89,11 +103,93 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	}
 
 	@Override
-	public String repoId() {
-		return configBean.repoId();
+	public String comboId() {
+		return configBean.comboId();
+	}
+
+	private Pattern excludePattern;
+
+	@Override
+	public boolean isExcluded(final String path) {
+
+		/** pattern */
+
+		if (configBean.enableExclude()) {
+			if (excludePattern.matcher(path).matches()) {
+				return true;
+			}
+		}
+
+		/** GAV */
+
+		final Gav gav = calculator.pathToGav(path);
+
+		if (gav == null) {
+			return true;
+		}
+
+		if (gav.isSnapshot()) {
+			if (configBean.publishSnapshots()) {
+				return false;
+			}
+		} else {
+			if (configBean.publishReleases()) {
+				return false;
+			}
+		}
+
+		return true;
+
 	}
 
 	//
+
+	private Pattern defaultPattern() {
+		try {
+			final String pattern = ConfigHelp.reference().getString(
+					"form-field-bundle.exclude-pattern.default-value");
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			log.error("should not happen", e);
+			return null;
+		}
+	}
+
+	private Pattern excludePattern(final String pattern) {
+		try {
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			log.error("invalid pattern, using default", e);
+			return defaultPattern();
+		}
+	}
+
+	/** render config status page */
+	@Override
+	public String status() {
+
+		final StringBuilder text = new StringBuilder(1024);
+		text.append("<pre>");
+
+		if (configBean.enableStatus()) {
+
+			Reporter.DEFAULT.report(text, "global");
+
+			amazonProvider.reporter().report(text, "amazon provider");
+
+			taskManager.report(text, configId());
+
+		} else {
+
+			text.append(ConfigHelp.reference().getString(
+					"form-footer.help-text"));
+
+		}
+
+		text.append("</pre>");
+		return text.toString();
+
+	}
 
 	/**
 	 * process config state change events
@@ -103,11 +199,44 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	 */
 	private void configState(final ConfigState configState) {
 
-		log.info("\n\t ### configState={}", configState);
+		log.info("\n\t ### configState : {} {}", configState, context().id());
 
 		this.configState = configState;
 
 		switch (configState) {
+
+		case INIT:
+
+			/** hack to populate default properties */
+
+			final String date = "[" + new Date() + "]";
+
+			final CapabilityIdentity id = context().id();
+			final boolean enabled = false;
+			final String notes;
+			if (context().notes() == null) {
+				notes = date;
+			} else {
+				notes = context().notes() + " " + date;
+			}
+
+			final Map<String, String> properties = ConfigDescriptor
+					.propsDefaultWithOverride(context().properties());
+
+			configBean = new ConfigBean(properties);
+
+			new Thread() {
+				@Override
+				public void run() {
+					try {
+						capaRegistry.update(id, enabled, notes, properties);
+					} catch (final Exception e) {
+						log.error("", e);
+					}
+				}
+			}.start();
+
+			break;
 
 		case ADDED:
 
@@ -115,20 +244,33 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			amazonProvider.config(configBean);
 
+			excludePattern = excludePattern(configBean.excludePattern());
+
 			conditionRepoAll.setSatisfied( //
-					Util.isRepoAll(configBean.repoId()));
+					RepoHelp.isRepoAll(configBean.comboId()));
 
 			break;
 
 		case ENABLED:
-			amazonProvider.start();
+
+			amazonProvider.ensure();
+
+			taskManager.ensureTasks(configId(), configBean);
+
 			break;
 
 		case DISABLED:
+
+			taskManager.cancelTasks(configId());
+
 			amazonProvider.stop();
+
 			break;
 
 		case REMOVED:
+
+			// NOOP
+
 			break;
 
 		}
@@ -137,24 +279,23 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	}
 
-	private boolean isEnabled() {
+	protected boolean isActive() {
+		return context().isActive();
+	}
+
+	protected boolean isEnabled() {
 		return context().isEnabled();
 	}
 
 	@Override
 	public void onCreate() throws Exception {
+		// configState(ConfigState.INIT);
 		configState(ConfigState.ADDED);
-		if (isEnabled()) {
-			configState(ConfigState.ENABLED);
-		}
 	}
 
 	@Override
 	public void onLoad() throws Exception {
 		configState(ConfigState.ADDED);
-		if (isEnabled()) {
-			configState(ConfigState.ENABLED);
-		}
 	}
 
 	@Override
@@ -180,28 +321,24 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	}
 
 	@Override
-	public void onActivate() {
-		configState(ConfigState.ACTIVATED);
-	}
-
-	@Override
-	public void onPassivate() {
-		configState(ConfigState.PASSIVATED);
-	}
-
-	@Override
-	public void onEnable() {
+	public void onActivate() throws Exception {
+		if (configState == ConfigState.INIT) {
+			return; // stay in INIT
+		}
 		configState(ConfigState.ENABLED);
 	}
 
 	@Override
-	public void onDisable() {
+	public void onPassivate() throws Exception {
+		if (configState == ConfigState.INIT) {
+			return; // stay in INIT
+		}
 		configState(ConfigState.DISABLED);
 	}
 
 	private String repoName() {
 
-		if ("*".equals(repoId())) {
+		if ("*".equals(comboId())) {
 			return "All Repositories";
 		}
 
@@ -217,83 +354,22 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	private Repository repo() {
 		try {
-			return registry.getRepository(repoId());
+			return repoRegistry.getRepository(comboId());
 		} catch (final Exception e) {
 			return null;
 		}
 	}
 
-	/** activate/deactivate config */
-	@Override
-	public Condition activationCondition() {
-
-		final Condition repoEnabled = conditions.repository()
-				.repositoryIsInService(new RepositoryConditions.RepositoryId() {
-					@Override
-					public String get() {
-						return repoId();
-					}
-				});
-
-		final Condition repoExists = conditions.repository().repositoryExists(
-				new RepositoryConditions.RepositoryId() {
-					@Override
-					public String get() {
-						return repoId();
-					}
-				});
-
-		final Condition notUpdate = conditions.capabilities()
-				.passivateCapabilityDuringUpdate(context().id());
-
-		final Condition storeExists = //
-		conditions.logical()
-				.or(conditionReporter, conditionRepoAll, repoExists);
-
-		final Condition never = new UnsatisfiedCondition("never");
-
-		return conditions.logical().and(amazonProvider.condition(),
-				storeExists, notUpdate);
-
-	}
-
-	/**  */
-	@Override
-	public Condition validityCondition() {
-
-		final Condition repoExists = conditions.repository().repositoryExists(
-				new RepositoryConditions.RepositoryId() {
-					@Override
-					public String get() {
-						return repoId();
-					}
-				});
-
-		// return conditions.logical().or(conditionRepoAll, repoExists);
-
-		return new SatisfiedCondition("always-valid");
-
-	}
-
 	@Override
 	public String description() {
 
-		return "Publish : " + repoName();
+		return "Publish[" + configId() + "] " + repoName();
 
 	}
 
 	@Override
-	public boolean equals(final Object other) {
-		if (other instanceof ConfigCapability) {
-			final ConfigCapability that = (ConfigCapability) other;
-			return that.configId().equals(this.configId());
-		}
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		return configId().hashCode();
+	public Condition activationCondition() {
+		return nexusCondition;
 	}
 
 }

@@ -7,6 +7,9 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.repository;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -20,29 +23,18 @@ import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.nexus.proxy.storage.local.LocalRepositoryStorage;
 import org.sonatype.nexus.proxy.storage.local.fs.DefaultFSLocalRepositoryStorage;
 
-import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotScanner;
-import com.carrotgarden.nexus.aws.s3.publish.storage.CarrotStorageProvider;
+import com.carrotgarden.nexus.aws.s3.publish.storage.CarrotRepositoryStorage;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Gauge;
 
 @Singleton
-@Named(CarrotCustomizerProvider.NAME)
-public class CarrotCustomizerProvider implements RepositoryCustomizer {
+@Named(CarrotRepositoryCustomizer.NAME)
+public class CarrotRepositoryCustomizer implements RepositoryCustomizer {
 
 	public static final String NAME = "carrot.repo.customizer";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-
-	{
-
-		log.info("init " + NAME);
-
-	}
-
-	@Inject
-	private CarrotScanner carrotScanner;
-
-	@Inject
-	@Named(CarrotStorageProvider.NAME)
-	private LocalRepositoryStorage carrotStorage;
 
 	/** handle only local maven */
 	@Override
@@ -58,15 +50,43 @@ public class CarrotCustomizerProvider implements RepositoryCustomizer {
 
 	}
 
+	private final Counter metricsRepoCount = Metrics.newCounter(getClass(),
+			"customized repositories count");
+
+	private final Set<String> metricsRepoSet = new HashSet<String>();
+
+	private final LocalRepositoryStorage carrotStorage;
+
+	@Inject
+	public CarrotRepositoryCustomizer( //
+			@Named(CarrotRepositoryStorage.NAME) final LocalRepositoryStorage carrotStorage //
+	) {
+
+		this.carrotStorage = carrotStorage;
+
+		Metrics.newGauge(getClass(), "customized repositories list",
+				new Gauge<String>() {
+					@Override
+					public String value() {
+						return metricsRepoSet.toString();
+					}
+				});
+
+	}
+
 	@Override
 	public void configureRepository(final Repository repository)
 			throws ConfigurationException {
 
-		// carrotScanner.register(repository);
+		final String repoId = repository.getId();
+
+		metricsRepoSet.add(repoId);
+
+		metricsRepoCount.inc();
 
 		repository.setLocalStorage(carrotStorage);
 
-		log.info("customized repo : {}", repository.getId());
+		log.info("customized repository : {} by {}", repoId, NAME);
 
 	}
 

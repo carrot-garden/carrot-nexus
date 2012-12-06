@@ -9,67 +9,28 @@ package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import static org.sonatype.nexus.plugins.capabilities.CapabilityType.*;
 
-import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.plugins.capabilities.CapabilityType;
 
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 /**
- * capability configuration properties bean
+ * plug-in configuration properties bean
+ * <p>
+ * read only
  * <p>
  * see ./src/main/resources/reference.conf
  */
 public class ConfigBean {
 
+	static final Logger log = LoggerFactory.getLogger(ConfigBean.class);
+
 	/** capability type id */
 	public static final String NAME = "carrot.config.aws.s3.publish";
 
 	public static final CapabilityType TYPE = capabilityType(NAME);
-
-	public static Map<String, String> defaultProps() {
-
-		final Config root = Util.reference();
-
-		return propsFrom(root);
-
-	}
-
-	public static Map<String, String> propsFrom(final File file) {
-
-		final Config root = ConfigFactory.parseFile(file);
-
-		return propsFrom(root);
-
-	}
-
-	public static Map<String, String> propsFrom(final Config root) {
-
-		final Config config = root.getConfig("form-field");
-
-		final Map<String, String> props = new HashMap<String, String>();
-
-		final Set<String> keySet = config.root().keySet();
-
-		for (final String configId : keySet) {
-
-			final Config configField = config.getConfig(configId);
-
-			final String configValue = configField.getString("value");
-
-			props.put(configId, configValue);
-
-		}
-
-		return props;
-
-	}
 
 	private final Map<String, String> props;
 
@@ -77,44 +38,81 @@ public class ConfigBean {
 		this.props = props;
 	}
 
+	private boolean asBoolean(final String key) {
+		return Boolean.parseBoolean((props.get(key)));
+	}
+
+	private int asInteger(final String key) {
+		return Integer.parseInt((props.get(key)));
+	}
+
+	private String asString(final String key) {
+		return props.get(key);
+	}
+
 	public String awsAccess() {
-		return props.get("aws-access");
+		return asString("aws-access");
 	}
 
 	public String awsSecret() {
-		return props.get("aws-secret");
+		return asString("aws-secret");
 	}
 
 	public String bucket() {
-		return props.get("bucket");
+		return asString("bucket");
 	}
 
 	public boolean enableEmail() {
-		return Boolean.parseBoolean((props.get("enable-email")));
+		return asBoolean("enable-email");
+	}
+
+	public boolean enableExclude() {
+		return asBoolean("enable-exclude");
 	}
 
 	public boolean enableFeeds() {
-		return Boolean.parseBoolean((props.get("enable-feeds")));
+		return asBoolean("enable-feeds");
 	}
 
-	public boolean publishReleases() {
-		return Boolean.parseBoolean((props.get("publish-releases")));
-	}
-
-	public boolean publishSnapshots() {
-		return Boolean.parseBoolean((props.get("publish-snapshots")));
+	public boolean enableScanner() {
+		return asBoolean("enable-scanner");
 	}
 
 	public String endpoint() {
-		return props.get("endpoint");
+		return asString("endpoint");
+	}
+
+	public String excludePattern() {
+		return asString("exclude-pattern");
 	}
 
 	public int healthPeriod() {
-		return Integer.parseInt(props.get("health-period"));
+		return asInteger("health-period");
 	}
 
-	public String repoId() {
-		return props.get("repo-id");
+	public String healthStrategy() {
+		return asString("health-strategy");
+	}
+
+	public boolean publishReleases() {
+		return asBoolean("publish-releases");
+	}
+
+	public boolean publishSnapshots() {
+		return asBoolean("publish-snapshots");
+	}
+
+	public boolean enableStatus() {
+		return asBoolean("enable-status");
+	}
+
+	/** "*" or group-id or repo-id */
+	public String comboId() {
+		return asString("combo-id");
+	}
+
+	public String scannerSchedule() {
+		return asString("scanner-schedule");
 	}
 
 	@Override

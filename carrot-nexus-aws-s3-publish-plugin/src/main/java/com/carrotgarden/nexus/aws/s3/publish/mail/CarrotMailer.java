@@ -18,6 +18,7 @@ import org.sonatype.micromailer.MailRequest;
 import org.sonatype.micromailer.MailRequestStatus;
 import org.sonatype.nexus.email.NexusEmailer;
 
+/***/
 @Named
 @Singleton
 public class CarrotMailer {

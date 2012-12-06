@@ -25,7 +25,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
-import com.carrotgarden.nexus.aws.s3.publish.util.Util;
+import com.carrotgarden.nexus.aws.s3.publish.util.PathHelp;
 
 //@Named(AmazonServiceProvider.NAME)
 public class zAmazonServiceProvider implements zAmazonService {
@@ -122,7 +122,7 @@ public class zAmazonServiceProvider implements zAmazonService {
 			final String bucket = amazonConfig.bucket();
 
 			final DeleteObjectRequest request = //
-			new DeleteObjectRequest(bucket, Util.rootLessPath(path));
+			new DeleteObjectRequest(bucket, PathHelp.rootLessPath(path));
 
 			client.deleteObject(request);
 
@@ -153,7 +153,7 @@ public class zAmazonServiceProvider implements zAmazonService {
 			final String bucket = amazonConfig.bucket();
 
 			final GetObjectRequest request = //
-			new GetObjectRequest(bucket, Util.rootLessPath(path));
+			new GetObjectRequest(bucket, PathHelp.rootLessPath(path));
 
 			final ObjectMetadata result = client.getObject(request, file);
 
@@ -184,7 +184,7 @@ public class zAmazonServiceProvider implements zAmazonService {
 			final String bucket = amazonConfig.bucket();
 
 			final PutObjectRequest request = //
-			new PutObjectRequest(bucket, Util.rootLessPath(path), file);
+			new PutObjectRequest(bucket, PathHelp.rootLessPath(path), file);
 
 			final PutObjectResult result = client.putObject(request);
 

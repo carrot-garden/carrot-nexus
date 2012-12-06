@@ -7,10 +7,13 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
+import static org.junit.Assert.*;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,7 +43,7 @@ public class TestConfigBean {
 	public void testLoad() {
 
 		final Map<String, String> props = new TreeMap<String, String>(
-				ConfigBean.defaultProps());
+				ConfigDescriptor.propsDefault());
 
 		final Set<Entry<String, String>> entrySet = props.entrySet();
 
@@ -60,7 +63,7 @@ public class TestConfigBean {
 
 		final Config reference = ConfigFactory.defaultReference();
 
-		final Config form = reference.getConfig("form-field");
+		final Config form = reference.getConfig("form-field-bundle");
 
 		final Set<Entry<String, ConfigValue>> entrySet = form.root().entrySet();
 
@@ -74,6 +77,30 @@ public class TestConfigBean {
 			log.info("{}={}", key, origin.lineNumber());
 
 		}
+
+	}
+
+	@Test
+	public void testRegex() {
+
+		assertTrue("/.nexus".matches("/\\..*"));
+		assertTrue("/.meta".matches("/[.].*"));
+		assertTrue("/.nexus".matches("/\\..*"));
+
+		assertTrue("/.nexus".matches("(/\\..*)|(/archetype-catalog.xml)"));
+		assertTrue("/archetype-catalog.xml"
+				.matches("(/\\..*)|(/archetype-catalog.xml)"));
+
+		assertTrue("demand".matches("^(demand|strategy)$"));
+		assertTrue("strategy".matches("^(demand|strategy)$"));
+
+		assertFalse("demand1".matches("^(demand|strategy)$"));
+		assertFalse("strategy2".matches("^(demand|strategy)$"));
+
+		final Pattern pattern = Pattern.compile("^(demand|strategy)$");
+
+		assertTrue(pattern.matcher("demand").matches());
+		assertFalse(pattern.matcher("demand1").matches());
 
 	}
 
