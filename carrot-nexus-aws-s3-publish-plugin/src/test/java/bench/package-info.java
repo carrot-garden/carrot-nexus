@@ -5,12 +5,5 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package temp;
+package bench;
 
-import org.sonatype.nexus.proxy.repository.Repository;
-
-interface CarrotScanner {
-
-	void register(Repository repository);
-
-}

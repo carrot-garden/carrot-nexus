@@ -38,7 +38,7 @@ import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 
 //@Singleton
 //@Named(CarrotScannerProvider.NAME)
-class CarrotScannerProvider implements CarrotScanner {
+class zCarrotScannerProvider implements zCarrotScanner {
 
 	private class ScannerTask extends ListenerSupport implements Runnable {
 

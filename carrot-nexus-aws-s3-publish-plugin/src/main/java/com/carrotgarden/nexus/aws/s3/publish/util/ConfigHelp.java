@@ -24,6 +24,7 @@ public class ConfigHelp {
 
 		final ObjectMapper mapper = new ObjectMapper();
 
+		@SuppressWarnings("unchecked")
 		final Map<String, String> map = mapper.readValue(file, Map.class);
 
 		return map;

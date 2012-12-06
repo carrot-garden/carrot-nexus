@@ -5,11 +5,9 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.event;
+package temp;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +21,9 @@ import org.sonatype.nexus.proxy.maven.MavenRepository;
 import org.sonatype.nexus.proxy.maven.gav.Gav;
 import org.sonatype.plexus.appevents.Event;
 
-import temp.zAmazonService;
-
-
-@Named
-@Singleton
-public class CarrotEventInspector implements EventInspector {
+//@Named
+//@Singleton
+class zCarrotEventInspector implements EventInspector {
 
 	public static final String NAME = "CarrotEventInspector";
 
@@ -58,23 +53,23 @@ public class CarrotEventInspector implements EventInspector {
 	public void inspect(final Event<?> evt) {
 
 		if (evt instanceof RepositoryItemEventStore) {
-			process((RepositoryItemEvent) evt, Mode.ADD);
+			process((RepositoryItemEvent) evt, zMode.ADD);
 			return;
 		}
 
 		if (evt instanceof RepositoryItemEventCache) {
-			process((RepositoryItemEvent) evt, Mode.ADD);
+			process((RepositoryItemEvent) evt, zMode.ADD);
 			return;
 		}
 
 		if (evt instanceof RepositoryItemEventDelete) {
-			process((RepositoryItemEvent) evt, Mode.REMOVE);
+			process((RepositoryItemEvent) evt, zMode.REMOVE);
 			return;
 		}
 
 	}
 
-	private void process(final RepositoryItemEvent evt, final Mode mode) {
+	private void process(final RepositoryItemEvent evt, final zMode mode) {
 
 		final StorageItem item = evt.getItem();
 

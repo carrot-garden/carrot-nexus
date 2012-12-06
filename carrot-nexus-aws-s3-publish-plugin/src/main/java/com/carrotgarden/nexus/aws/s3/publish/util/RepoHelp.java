@@ -52,6 +52,7 @@ public class RepoHelp {
 
 		final LocalRepositoryStorage storage = repository.getLocalStorage();
 
+		@SuppressWarnings("deprecation")
 		final URL repoURL = storage.getAbsoluteUrlFromBase(repository, request);
 
 		final URI repoURI = repoURL.toURI();

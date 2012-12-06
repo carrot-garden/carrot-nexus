@@ -10,9 +10,14 @@ package com.carrotgarden.nexus.aws.s3.publish.metrics;
 import javax.inject.Named;
 
 import com.google.inject.AbstractModule;
+import com.yammer.metrics.guice.InstrumentationModule;
 
 /**
  * activate metrics annotations
+ * <p>
+ * use of annotations problematic due to singleton registry assumption.
+ * <p>
+ * TODO need another custom module
  */
 @Named
 public class MetricsModule extends AbstractModule {
@@ -20,9 +25,7 @@ public class MetricsModule extends AbstractModule {
 	@Override
 	protected void configure() {
 
-		// TODO
-
-		// install(new InstrumentationModule());
+		install(new InstrumentationModule());
 
 	}
 

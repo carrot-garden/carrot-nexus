@@ -5,7 +5,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.field;
+package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ import org.sonatype.nexus.formfields.TextAreaFormField;
 /**
  * form field builder
  */
-public enum FieldEnum {
+public enum Field {
 
 	STRING("string") {
 		@Override
@@ -68,7 +68,7 @@ public enum FieldEnum {
 
 	;
 
-	private static final Logger log = LoggerFactory.getLogger(FieldEnum.class);
+	private static final Logger log = LoggerFactory.getLogger(Field.class);
 
 	public abstract FormField newFromField( //
 			final String id, //
@@ -80,12 +80,12 @@ public enum FieldEnum {
 
 	public final String code;
 
-	FieldEnum(final String code) {
+	Field(final String code) {
 		this.code = code;
 	}
 
-	public static FieldEnum from(final String code) {
-		for (final FieldEnum known : FieldEnum.values()) {
+	public static Field from(final String code) {
+		for (final Field known : Field.values()) {
 			if (known.code.equalsIgnoreCase(code)) {
 				return known;
 			}

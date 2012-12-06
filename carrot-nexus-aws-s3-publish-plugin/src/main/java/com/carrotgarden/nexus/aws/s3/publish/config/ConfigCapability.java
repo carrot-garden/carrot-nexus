@@ -40,7 +40,7 @@ import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 /**
  * plug-in configuration life cycle manager
  */
-@Named(ConfigBean.NAME)
+@Named(ConfigDescriptor.NAME)
 public class ConfigCapability extends CapabilitySupport implements Capability,
 		ConfigEntry {
 
@@ -205,6 +205,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 		switch (configState) {
 
+		/** not used */
 		case INIT:
 
 			/** hack to populate default properties */
@@ -220,7 +221,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 				notes = context().notes() + " " + date;
 			}
 
-			final Map<String, String> properties = ConfigDescriptor
+			final Map<String, String> properties = Form
 					.propsDefaultWithOverride(context().properties());
 
 			configBean = new ConfigBean(properties);

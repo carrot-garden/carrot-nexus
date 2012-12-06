@@ -128,6 +128,10 @@ public class TaskManager {
 
 	public void ensureTasks(final String configId, final ConfigBean configBean) {
 
+		if (!configBean.enableScanner()) {
+			return;
+		}
+
 		metricsEnsureCount.inc();
 
 		cancel(configId, ConfigType.ON_DEMAND);

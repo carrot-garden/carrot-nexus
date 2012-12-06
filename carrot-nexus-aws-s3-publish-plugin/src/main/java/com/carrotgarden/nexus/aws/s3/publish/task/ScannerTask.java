@@ -93,18 +93,18 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 
 	private final TaskReporter reporter;
 
-	private NexusScheduler taskScheduler;
+	private NexusScheduler scheduler;
 
 	@Inject
 	public ScannerTask( //
 			final TaskReporter reporter, //
-			final NexusScheduler taskScheduler, //
+			final NexusScheduler scheduler, //
 			@Named("serial") final Scanner scanner, //
 			final CapabilityRegistry capaRegistry, //
 			final RepositoryRegistry repoRegistry //
 	) {
 
-		this.taskScheduler = taskScheduler;
+		this.scheduler = scheduler;
 		this.reporter = reporter;
 		this.scanner = scanner;
 		this.capaRegistry = capaRegistry;
@@ -123,7 +123,7 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 	private String taskState() {
 		try {
 			final ScheduledTask<?> reference = //
-			TaskHelp.reference(taskScheduler, this);
+			TaskHelp.reference(scheduler, this);
 			final TaskState state = reference.getTaskState();
 			return state.name();
 		} catch (final Exception e) {
@@ -172,6 +172,13 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 	}
 
 	private void doWork() throws Exception {
+
+		// TODO reset reporter
+
+		if (shouldYield()) {
+			log.info("yielding to priority tasks");
+			return;
+		}
 
 		final CapabilityIdentity capaId = new CapabilityIdentity(configId());
 
@@ -301,6 +308,37 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 			log.info("\n{}", report);
 
 		}
+
+	}
+
+	/** scheduled tasks should yield to on-demand tasks, if any */
+	private boolean shouldYield() {
+
+		/** self is on-demand */
+		if (configType() == ConfigType.ON_DEMAND) {
+			return false;
+		}
+
+		/** no scanner tasks */
+		final List<ScheduledTask<?>> referenceList = //
+		scheduler.getAllTasks().get(NAME);
+
+		if (referenceList == null) {
+			return false;
+		}
+
+		/** any other on-demand scanner task running ? */
+		for (final ScheduledTask<?> reference : referenceList) {
+
+			final ScannerTask task = (ScannerTask) reference.getTask();
+
+			if (task.configType() == ConfigType.ON_DEMAND) {
+				return true;
+			}
+
+		}
+
+		return false;
 
 	}
 

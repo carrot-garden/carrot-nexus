@@ -43,7 +43,7 @@ public class TestConfigBean {
 	public void testLoad() {
 
 		final Map<String, String> props = new TreeMap<String, String>(
-				ConfigDescriptor.propsDefault());
+				Form.propsDefault());
 
 		final Set<Entry<String, String>> entrySet = props.entrySet();
 

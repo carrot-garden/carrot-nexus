@@ -25,11 +25,13 @@
 			<arg value="clean" />
 			<arg value="verify" />
 
+			<arg value="--errors" />
+
 			<arg value="--activate-profiles" />
 			<arg value="it-02" />
 
 			<arg value="--define" />
-			<arg value="it.test=Main02" />
+			<arg value="it.test=TestScanner" />
 
 		</exec>
 

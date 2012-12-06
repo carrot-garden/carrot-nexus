@@ -7,30 +7,17 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
-import static org.sonatype.nexus.plugins.capabilities.CapabilityType.*;
-
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonatype.nexus.plugins.capabilities.CapabilityType;
 
 /**
  * plug-in configuration properties bean
  * <p>
  * read only
  * <p>
- * see ./src/main/resources/reference.conf
+ * see {@link Form}
  */
 public class ConfigBean {
-
-	static final Logger log = LoggerFactory.getLogger(ConfigBean.class);
-
-	/** capability type id */
-	public static final String NAME = "carrot.config.aws.s3.publish";
-
-	public static final CapabilityType TYPE = capabilityType(NAME);
 
 	private final Map<String, String> props;
 
@@ -62,6 +49,10 @@ public class ConfigBean {
 		return asString("bucket");
 	}
 
+	public String comboId() {
+		return asString("combo-id");
+	}
+
 	public boolean enableEmail() {
 		return asBoolean("enable-email");
 	}
@@ -76,6 +67,10 @@ public class ConfigBean {
 
 	public boolean enableScanner() {
 		return asBoolean("enable-scanner");
+	}
+
+	public boolean enableStatus() {
+		return asBoolean("enable-status");
 	}
 
 	public String endpoint() {
@@ -100,15 +95,6 @@ public class ConfigBean {
 
 	public boolean publishSnapshots() {
 		return asBoolean("publish-snapshots");
-	}
-
-	public boolean enableStatus() {
-		return asBoolean("enable-status");
-	}
-
-	/** "*" or group-id or repo-id */
-	public String comboId() {
-		return asString("combo-id");
 	}
 
 	public String scannerSchedule() {

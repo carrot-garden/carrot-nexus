@@ -40,7 +40,7 @@ public class ConfigBoot implements EventBus.LoadOnStart {
 
 		try {
 
-			final CapabilityType type = ConfigBean.TYPE;
+			final CapabilityType type = ConfigDescriptor.TYPE;
 
 			if (hasNoReference(registry, type)) {
 
@@ -50,7 +50,7 @@ public class ConfigBoot implements EventBus.LoadOnStart {
 
 				final String notes = "default config";
 
-				final Map<String, String> props = ConfigDescriptor
+				final Map<String, String> props = Form
 						.propsDefault();
 
 				registry.add(type, isEnabled, notes, props);

@@ -18,10 +18,13 @@ import org.sonatype.micromailer.MailRequest;
 import org.sonatype.micromailer.MailRequestStatus;
 import org.sonatype.nexus.email.NexusEmailer;
 
-/***/
-@Named
+/** 
+ */
+@Named(CarrotMailer.NAME)
 @Singleton
 public class CarrotMailer {
+
+	public static final String NAME = "carrot.mailer";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

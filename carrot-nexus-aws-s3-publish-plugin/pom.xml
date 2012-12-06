@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-
-    Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
-
-    All rights reserved. Licensed under the OSI BSD License.
-
-    http://www.opensource.org/licenses/bsd-license.php
-
--->
+<!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
+	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
 <!-- Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com> 
 	All rights reserved. Licensed under the OSI BSD License. http://www.opensource.org/licenses/bsd-license.php -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -73,7 +66,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<!-- cache -->
 		<!-- <dependency> -->
 		<!-- <groupId>com.google.guava</groupId> -->
@@ -246,26 +239,27 @@
 				</dependencies>
 			</plugin>
 
-			<!-- plexus container injection metadata -->
-			<plugin>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-component-metadata</artifactId>
-				<version>1.5.5</version>
-				<executions>
-					<execution>
-						<id>process-classes</id>
-						<goals>
-							<goal>generate-metadata</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>process-test-classes</id>
-						<goals>
-							<goal>generate-test-metadata</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+			<!-- plexus container injection metadata; need only if using non JSR 330 
+				javax.inject annotations -->
+			<!-- <plugin> -->
+			<!-- <groupId>org.codehaus.plexus</groupId> -->
+			<!-- <artifactId>plexus-component-metadata</artifactId> -->
+			<!-- <version>1.5.5</version> -->
+			<!-- <executions> -->
+			<!-- <execution> -->
+			<!-- <id>process-classes</id> -->
+			<!-- <goals> -->
+			<!-- <goal>generate-metadata</goal> -->
+			<!-- </goals> -->
+			<!-- </execution> -->
+			<!-- <execution> -->
+			<!-- <id>process-test-classes</id> -->
+			<!-- <goals> -->
+			<!-- <goal>generate-test-metadata</goal> -->
+			<!-- </goals> -->
+			<!-- </execution> -->
+			<!-- </executions> -->
+			<!-- </plugin> -->
 
 		</plugins>
 
@@ -316,17 +310,20 @@
 			<id>it-01</id>
 			<build>
 				<plugins>
-
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
 					<plugin>
 						<groupId>org.sonatype.nexus.plugins</groupId>
 						<artifactId>nexus-test-environment-maven-plugin</artifactId>
 						<version>${nexus.version}</version>
 						<configuration>
-
 							<nexusVersion>${nexus.version}</nexusVersion>
-
 							<nexusBundleName>nexus-oss-webapp-${nexus.version}</nexusBundleName>
-
 							<nexusBundleArtifact>
 								<groupId>org.sonatype.nexus</groupId>
 								<artifactId>nexus-oss-webapp</artifactId>
@@ -334,7 +331,6 @@
 								<type>zip</type>
 								<classifier>bundle</classifier>
 							</nexusBundleArtifact>
-
 							<nexusPluginsArtifacts>
 								<!-- <plugin> -->
 								<!-- <groupId>org.sonatype.nexus</groupId> -->
@@ -355,7 +351,6 @@
 								<!-- <artifactId>security-url-realm</artifactId> -->
 								<!-- </jar> -->
 							</nexusPluginsArtifacts>
-
 						</configuration>
 						<executions>
 							<execution>
@@ -367,7 +362,6 @@
 							</execution>
 						</executions>
 					</plugin>
-
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
@@ -394,6 +388,13 @@
 			</activation>
 			<build>
 				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>

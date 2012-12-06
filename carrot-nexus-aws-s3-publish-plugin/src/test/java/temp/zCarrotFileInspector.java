@@ -5,15 +5,13 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.attribute;
+package temp;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +19,9 @@ import org.sonatype.nexus.proxy.attributes.StorageFileItemInspector;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
-import temp.zAmazonService;
-
-@Named
-@Singleton
-public class CarrotFileInspector implements StorageFileItemInspector {
+//@Named
+//@Singleton
+class zCarrotFileInspector implements StorageFileItemInspector {
 
 	public static final String NAME = "CarrotFileInspector";
 

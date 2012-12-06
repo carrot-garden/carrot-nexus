@@ -5,9 +5,9 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package com.carrotgarden.nexus.aws.s3.publish.event;
+package temp;
 
-public enum Mode {
+enum zMode {
 
 	ADD, //
 

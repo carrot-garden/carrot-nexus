@@ -8,6 +8,8 @@
 package it.case_02;
 
 import static org.junit.Assert.*;
+import it.any.TestAny;
+import it.util.TestHelp;
 
 import java.io.File;
 
@@ -17,9 +19,9 @@ import org.sonatype.nexus.plugins.capabilities.internal.rest.dto.CapabilityListI
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttributeBean;
 
-public class Main02 extends Base {
+public class TestDeploy extends TestAny {
 
-	public Main02(final String nexusBundleCoordinates) {
+	public TestDeploy(final String nexusBundleCoordinates) {
 		super(nexusBundleCoordinates);
 	}
 
@@ -76,7 +78,7 @@ public class Main02 extends Base {
 
 		assertTrue("target present", target.exists());
 		assertTrue("attrib present", attrib.exists());
-		assertTrue("source equals target", isSameFile(source, target));
+		assertTrue("source equals target", TestHelp.isSameFile(source, target));
 
 		final CarrotAttribute carrot = CarrotAttributeBean.fromJson(attrib);
 
@@ -122,18 +124,18 @@ public class Main02 extends Base {
 
 		assertTrue("target present", target.exists());
 		assertTrue("attrib present", attrib.exists());
-		assertTrue("source equals target", isSameFile(source, target));
+		assertTrue("source equals target", TestHelp.isSameFile(source, target));
 
 		final CarrotAttribute carrot = CarrotAttributeBean.fromJson(attrib);
 
 		assertTrue("attrib is set", carrot.isSaved());
 		assertTrue("attrib time in range",
-				isOrdered(timeStart, carrot.saveTime(), timeFinish));
+				TestHelp.isOrdered(timeStart, carrot.saveTime(), timeFinish));
 
 		final File amazon = fileTransient();
 
 		assertTrue("amazon retrieve", amazonService().load(path, amazon));
-		assertTrue("source equals amazon", isSameFile(source, amazon));
+		assertTrue("source equals amazon", TestHelp.isSameFile(source, amazon));
 
 	}
 

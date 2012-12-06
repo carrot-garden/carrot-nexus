@@ -5,7 +5,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package it.case_02;
+package it.any;
 
 import static org.junit.Assert.*;
 import static org.sonatype.nexus.client.rest.BaseUrl.*;
@@ -13,10 +13,11 @@ import static org.sonatype.nexus.plugins.capabilities.internal.rest.dto.Capabili
 import static org.sonatype.nexus.testsuite.support.NexusStartAndStopStrategy.Strategy.*;
 import static org.sonatype.nexus.testsuite.support.ParametersLoaders.*;
 import static org.sonatype.sisu.goodies.common.Varargs.*;
+import it.util.Ready;
+import it.util.TestHelp;
 
 import java.io.File;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,8 @@ import org.apache.maven.index.artifact.M2GavCalculator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +52,7 @@ import org.sonatype.nexus.plugins.capabilities.internal.rest.dto.CapabilityListI
 import org.sonatype.nexus.plugins.capabilities.internal.rest.dto.CapabilityResource;
 import org.sonatype.nexus.test.utils.DeployUtils;
 import org.sonatype.nexus.test.utils.EventInspectorsUtil;
-import org.sonatype.nexus.test.utils.FileTestingUtils;
-import org.sonatype.nexus.testsuite.support.NexusRunningParametrizedITSupport;
+import org.sonatype.nexus.testsuite.support.NexusRunningITSupport;
 import org.sonatype.nexus.testsuite.support.NexusStartAndStopStrategy;
 import org.sonatype.sisu.maven.bridge.MavenModelResolver;
 import org.sonatype.sisu.maven.bridge.support.ModelBuildingRequestBuilder;
@@ -59,17 +61,15 @@ import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonProvider;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigDescriptor;
+import com.carrotgarden.nexus.aws.s3.publish.config.Form;
 
+@RunWith(Parameterized.class)
 @NexusStartAndStopStrategy(EACH_TEST)
-public abstract class Base extends NexusRunningParametrizedITSupport {
-
-	protected static interface Ready {
-		boolean isReady();
-	}
+public abstract class TestAny extends NexusRunningITSupport {
 
 	protected final static M2GavCalculator gavCalc = new M2GavCalculator();
 
-	protected static final Logger log = LoggerFactory.getLogger(Base.class);
+	protected static final Logger log = LoggerFactory.getLogger(TestAny.class);
 
 	private static final String repoId = "releases";
 
@@ -104,18 +104,18 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 
 	private NexusClient nexusSystemClient;
 
-	public Base(final String nexusBundleCoordinates) {
+	public TestAny(final String nexusBundleCoordinates) {
 		super(nexusBundleCoordinates);
 	}
 
-	/** amazon service with bucket access */
+	/** testing amazon service with bucket access */
 	protected AmazonService amazonService() {
 
 		if (amazonProviderIsNew) {
 
-			final File file = configFile();
+			final File file = TestHelp.configFile();
 
-			final Map<String, String> props = ConfigDescriptor.propsFrom(file);
+			final Map<String, String> props = Form.propsFrom(file);
 
 			final ConfigBean config = new ConfigBean(props);
 
@@ -132,11 +132,12 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 				}
 			};
 
-			sleep(1 * 1000, ready);
+			TestHelp.sleep(1 * 1000, ready);
 
 		}
 
 		return amazonProvider;
+
 	}
 
 	protected void apply(final CapabilityResource item,
@@ -178,18 +179,18 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 	/** configuration with amazon access */
 	protected void applyConfigCustom() throws Exception {
 
-		applyConfig(true, ConfigDescriptor.propsFrom(configFile()));
+		applyConfig(true, Form.propsFrom(TestHelp.configFile()));
 
 	}
 
-	/** configuration with NO amazon access */
+	/** default configuration with NO amazon access */
 	protected void applyConfigDefault() throws Exception {
 
-		applyConfig(false, ConfigDescriptor.propsDefault());
+		applyConfig(false, Form.propsDefault());
 
 	}
 
-	/** this project plug-in bundle */
+	/** this project plug-in bundle.zip; must be built */
 	protected File bundleFile() {
 
 		final File projectPom = new File("pom.xml");
@@ -222,26 +223,12 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 
 	}
 
-	/** config file with amazon access */
-	protected File configFile() {
-
-		final String home = System.getProperty("user.home");
-
-		final File folder = new File(home, ".amazon/carrotgarden");
-
-		final File file = new File(folder, ConfigBean.NAME + ".conf");
-
-		assertTrue(file.exists());
-
-		return file;
-
-	}
-
 	@Override
 	protected NexusBundleConfiguration configureNexus(
 			final NexusBundleConfiguration configuration) {
 
 		/** dependency plug-ins */
+
 		configuration.addPlugins(
 
 		artifactResolver().resolvePluginFromDependencyManagement(
@@ -250,6 +237,7 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 		);
 
 		/** project self plug-in */
+
 		configuration.addPlugins(bundleFile());
 
 		return configuration;
@@ -288,10 +276,13 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 
 	}
 
+	/** deploy existing test resource file */
 	protected void deploy(final String path) throws Exception {
+		assertNotNull(path);
 		deploy(path, fileSource(path));
 	}
 
+	/** deploy via rest */
 	protected void deploy(final String path, final File file) throws Exception {
 		assertNotNull(path);
 		assertNotNull(file);
@@ -311,11 +302,10 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 		return file;
 	}
 
-	/** original file in resources */
+	/** original file in src/test/it-resources */
 	protected File fileSource(final String path) {
 		assertNotNull(path);
-		final File folder = new File("resources/case_02/files");
-		final File file = new File(folder, path);
+		final File file = testData().resolveFile(path);
 		return file;
 	}
 
@@ -334,25 +324,17 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 		return file;
 	}
 
+	/** rest event state lookup */
 	protected EventInspectorsUtil inspector() {
 		return new EventInspectorsUtil(nexusRestletClient);
 	}
 
-	protected boolean isOrdered(final long... source) {
-		final long[] target = source.clone();
-		Arrays.sort(target);
-		return Arrays.equals(source, target);
-	}
-
-	protected boolean isSameFile(final File source, final File target)
-			throws Exception {
-		return FileTestingUtils.compareFileSHA1s(source, target);
-	}
-
+	/** test repo id */
 	protected String repoId() {
 		return repoId;
 	}
 
+	/** nexus repository root folder for test repo id */
 	protected File repoRoot() {
 		final File work = nexus().getWorkDirectory();
 		final File folder = new File(work, "storage/" + repoId());
@@ -360,10 +342,10 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 		return folder;
 	}
 
-	/** locate default carrot resource */
+	/** locate default plug-in configuration */
 	protected CapabilityListItemResource resourceEntry() {
 
-		final String typeId = ConfigBean.NAME;
+		final String typeId = ConfigDescriptor.NAME;
 
 		final List<CapabilityListItemResource> itemList = capabilities().list();
 
@@ -393,43 +375,15 @@ public abstract class Base extends NexusRunningParametrizedITSupport {
 
 	}
 
-	/** locate default carrot resource */
+	/** locate default plug-in configuration */
 	protected CapabilityResource resourceItem() {
 		return capabilities().get(resourceEntry().getId());
 	}
 
-	/** work around guice bug; see super.scanning() */
+	/** work around plexus/guice bug; see super.scanning() */
 	@Override
 	public BeanScanning scanning() {
 		return BeanScanning.ON;
-	}
-
-	protected void sleep(final long millis) {
-		final Ready never = new Ready() {
-			@Override
-			public boolean isReady() {
-				return false;
-			}
-
-		};
-		sleep(millis, 1, never);
-	}
-
-	protected void sleep(final long millis, final int steps, final Ready state) {
-		for (int k = 0; k < steps; k++) {
-			if (state.isReady()) {
-				return;
-			}
-			try {
-				Thread.sleep(millis / steps);
-			} catch (final Exception e) {
-				return;
-			}
-		}
-	}
-
-	protected void sleep(final long millis, final Ready state) {
-		sleep(millis, 10, state);
 	}
 
 }
