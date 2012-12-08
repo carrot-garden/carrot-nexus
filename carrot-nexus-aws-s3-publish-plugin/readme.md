@@ -33,14 +33,6 @@ maven central has
 (http://search.maven.org/#search%7Cga%7C1%7Ccarrot-nexus-aws-s3-publish-plugin)
 and you are looking for the ```bundle.zip``` artifact;
 
-### nexus
-
-this plug-in depends on appropriate **nexus** and **nexus-capabilities-plugin** versions;
-when in doubt, please check ```nexus.version``` and ```nexus-capabilities.version``` in the
-[project descriptor]
-(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/pom.xml)
-of the currently downloaded plug-in bundle;
-
 ### install
 
 ``` 
@@ -80,6 +72,17 @@ will be re-created again on nexus restart;
 
 ![default config screen]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-01.png)
+
+### version
+
+this plug-in depends on appropriate **nexus** and **nexus-capabilities-plugin** versions;
+when in doubt, please check ```nexus.version``` and ```nexus-capabilities.version``` in the
+[project descriptor]
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/pom.xml)
+of the currently downloaded plug-in bundle; 
+
+plug-in convention is such, that in plug-in version ```2.2.1-build002``` 
+```2.2.1``` means the base nexus version the plug-in is built against;  
 
 ### troubleshoot
 
