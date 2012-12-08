@@ -51,7 +51,7 @@ import com.google.common.base.Throwables;
 import com.yammer.metrics.core.Gauge;
 
 /**
- * scan repository an publish files to amazon
+ * scan repository and publish newly found files to amazon
  */
 @Named(ScannerTask.NAME)
 public class ScannerTask extends AbstractNexusTask<Object> {
