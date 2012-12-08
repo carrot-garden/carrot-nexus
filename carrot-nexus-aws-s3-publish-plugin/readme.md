@@ -101,7 +101,7 @@ S3 Extended Request ID: fMHxoVvODIa1DNqASSw4XPF9aBASw1Y+J8lHMxCgrYSvYJQ0LuU+WWow
 at com.amazonaws.http.AmazonHttpClient.handleErrorRespon..
 ``` 
 
-enable plug-in and try to upload artifact via nexus gui; 
+you can also enable plug-in and then try to upload artifact via nexus gui; 
 if you get the message similar to the following, 
 your amazon credentials are likely incorrect:
 
