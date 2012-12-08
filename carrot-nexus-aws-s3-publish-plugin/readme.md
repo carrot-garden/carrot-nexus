@@ -22,8 +22,8 @@ that artifact is also published to the aws s3 bucket;
 additionally, plugin runs a task on schedule
 which ensures that pre-existing artifacts are also published;
 
-finally, when plug-in is **enabled** and amazon s3 bucket becomes unavailable for any reason,
-you will not be able to deploy or cache any artifacts in the affected/configured repositories,
+finally, when plug-in is **enabled** and amazon s3 bucket becomes **unavailable** for any reason,
+you will not be able to deploy or cache any artifacts in the plugin-configured repositories,
 until that bucket becomes available again;
 
 ### repo
