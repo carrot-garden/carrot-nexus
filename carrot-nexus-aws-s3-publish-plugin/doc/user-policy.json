@@ -1,0 +1,18 @@
+{
+    "Statement": [
+        {
+            "Sid": "MavenRepoEditor",
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:DeleteObject",
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::maven-tester",
+                "arn:aws:s3:::maven-tester/*"
+            ]
+        }
+    ]
+}

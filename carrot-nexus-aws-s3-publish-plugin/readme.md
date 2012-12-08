@@ -35,30 +35,18 @@ and you are looking for the ```bundle.zip``` artifact;
 
 ### install
 
-``` 
-#!/bin/bash
-#
-# unzip plugin bundle into the plugins folder, and then restart the service:
-#
-# nexus work folder
-NEXUS="/var/lib/nexus"
-# current plugin version
-VERSION="2.2.1-build002"
-#
-REPO="http://repo1.maven.org/maven2"
-GROUP="com/carrotgarden/nexus"
-ARTIFACT="carrot-nexus-aws-s3-publish-plugin"
-PLUGIN_BUNDLE="$ARTIFACT-$VERSION-bundle.zip"
-URL="$REPO/$GROUP/$ARTIFACT/$VERSION/$PLUGIN_BUNDLE"
-#
-cd $NEXUS/sonatype-work/nexus/plugin-repository
-wget $URL 
-unzip $PLUGIN_BUNDLE
-service nexus restart
+you need to unzip plugin bundle into the plugins folder, and then restart the service;
 
-```
+for example, you could use the following
+[install script]
+(https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/install.sh)
 
 ### configure
+
+you need to create aws s3 bucket and corresponding user or group credentials;
+for example, here is 
+[minimum required user access policy]
+(https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/user-policy.json)
 
 plug-in installs **default configuration** under:
 ```
