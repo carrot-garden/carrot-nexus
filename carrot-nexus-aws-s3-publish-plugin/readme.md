@@ -20,7 +20,7 @@ each time you deploy or cache an artifact into your nexus,
 that artifact is also published to the aws s3 bucket;
 
 additionally, plugin runs a task on schedule
-which ensures that pre-existing artifacts are also published;
+which ensures that pre-existing artifacts are also published to the amazon;
 
 finally, when plug-in is **enabled** and amazon s3 bucket becomes **unavailable** for any reason,
 you will not be able to deploy or cache any artifacts in the plugin-configured repositories,
