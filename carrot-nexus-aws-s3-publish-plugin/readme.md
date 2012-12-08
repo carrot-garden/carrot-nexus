@@ -86,15 +86,13 @@ the ```2.2.1``` means the base nexus version the plug-in is built against;
 
 ### troubleshoot
 
-* remember to select "Enabled" check box and do "Save" after you supplied your credentials
+* remember to select "Enabled" check box and do "Save" after you supplied your credentials and bucket
 * navigate and refresh : ```Nexus -> Views -> System Feeds -> Error and Warning Events```
-* reduce health check period to see changes sooner
 * enable plug-in status page and see what's there
 * grep through nexus.log
 
-example error message you will find in ```System Feeds``` for invalid aws s3 access key: 
+example error message you will find in ```System Feeds``` for an invalid aws s3 access key: 
 ```
-### amazon provider unavailable
 Status Code: 403, AWS Service: Amazon S3, 
 AWS Request ID: 89FA96BD3AD3AF32, 
 AWS Error Code: InvalidAccessKeyId, 
@@ -104,7 +102,7 @@ at com.amazonaws.http.AmazonHttpClient.handleErrorRespon..
 ``` 
 
 enable plug-in and try to upload artifact via nexus gui; 
-if you receive the message similar to the following, 
+if you get the message similar to the following, 
 your amazon credentials are likely incorrect:
 
 ![upload error]
