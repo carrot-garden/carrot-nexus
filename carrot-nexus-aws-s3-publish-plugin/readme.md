@@ -51,7 +51,7 @@ of the currently downloaded plug-in bundle;
 # nexus work folder
 NEXUS="/var/lib/nexus"
 # current plugin version
-VERSION="2.2.1-build001"
+VERSION="2.2.1-build002"
 #
 REPO="http://repo1.maven.org/maven2"
 GROUP="com/carrotgarden/nexus"
@@ -85,9 +85,8 @@ will be re-created again on nexus restart;
 
 * remember to select "Enabled" check box and do "Save" after you supplied your credentials
 * navigate and refresh : ```Nexus -> Views -> System Feeds -> Error and Warning Events```
-* verify state of "Active" check box and pay attention to message there, if any
-* click "Refresh" to see if "Active" state changed
 * reduce health check period to see changes sooner
+* enable plug-in status page and see what's there
 * grep through nexus.log
 
 example error message you will find in ```System Feeds``` for invalid aws s3 access key: 
@@ -101,9 +100,9 @@ S3 Extended Request ID: fMHxoVvODIa1DNqASSw4XPF9aBASw1Y+J8lHMxCgrYSvYJQ0LuU+WWow
 at com.amazonaws.http.AmazonHttpClient.handleErrorRespon..
 ``` 
 
-enable plugin and try to upload artifact via nexus gui;
-
-if you receive the following message, your amazon credentials are incorrect:
+enable plug-in and try to upload artifact via nexus gui; 
+if you receive the message similar to the following, 
+your amazon credentials are likely incorrect:
 
 ![upload error]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-02.png)
