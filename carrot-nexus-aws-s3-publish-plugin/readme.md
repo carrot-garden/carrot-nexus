@@ -102,7 +102,7 @@ at com.amazonaws.http.AmazonHttpClient.handleErrorRespon..
 ``` 
 
 you can also enable plug-in and then try to upload artifact via nexus gui; 
-if you get the message similar to the following, 
+if you get a message similar to the following, 
 your amazon credentials are likely incorrect:
 
 ![upload error]
