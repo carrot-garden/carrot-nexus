@@ -57,6 +57,10 @@ public class ConfigBean {
 		return asString("email-address");
 	}
 
+	public String emailReports() {
+		return asString("email-reports");
+	}
+
 	public boolean enableEmail() {
 		return asBoolean("enable-email");
 	}

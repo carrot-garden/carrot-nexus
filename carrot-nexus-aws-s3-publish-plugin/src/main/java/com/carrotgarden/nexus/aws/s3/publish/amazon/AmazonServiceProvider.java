@@ -31,13 +31,20 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
+import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.CarrotMailer;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.AmazonReporter;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 import com.carrotgarden.nexus.aws.s3.publish.util.PathHelp;
+import com.google.inject.assistedinject.Assisted;
+import com.yammer.metrics.core.Gauge;
 
-@Named(AmazonProvider.NAME)
-public class AmazonProvider implements AmazonService, AmazonManager {
+/**
+ */
+@Named(AmazonServiceProvider.NAME)
+public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 	public static final String NAME = "carrot.amazon.provider";
 
@@ -48,13 +55,33 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 	Executors.newScheduledThreadPool(1, threadFactory);
 
 	private final AmazonReporter reporter;
+	private final CarrotMailer mailer;
+	private final ConfigEntry entry;
 
 	@Inject
-	public AmazonProvider( //
-			final AmazonReporter reporter //
+	public AmazonServiceProvider( //
+			final CarrotMailer mailer, //
+			final AmazonReporter reporter, //
+			@Assisted final ConfigEntry entry //
+
 	) {
 
+		this.entry = entry;
+		this.mailer = mailer;
 		this.reporter = reporter;
+
+		reporter.newGauge("provider failure", new Gauge<String>() {
+			@Override
+			public String value() {
+				return "" + failure;
+			}
+		});
+		reporter.newGauge("provider available", new Gauge<Boolean>() {
+			@Override
+			public Boolean value() {
+				return isAvailable();
+			}
+		});
 
 	}
 
@@ -62,7 +89,7 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 	private volatile AmazonS3Client client;
 
-	private volatile ConfigBean config;
+	private volatile ConfigBean configBean;
 
 	private volatile ScheduledFuture<?> healthFuture;
 
@@ -100,38 +127,36 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = config.bucket();
+			final String bucket = configBean.bucket();
 
 			final GetBucketLocationRequest request = //
 			new GetBucketLocationRequest(bucket);
 
 			final String result = client.getBucketLocation(request);
 
-			if (!setAvailable(true) || isFirstScheck()) {
-				log.info(NAME + " available");
-			}
+			setAvailable(true, null);
 
 		} catch (final Exception e) {
 
-			if (setAvailable(false) || isFirstScheck()) {
-				log.error(NAME + " unavailable", e);
-			}
+			setAvailable(false, e);
 
 		}
+
+		mailer.sendAmazonReport(Report.AMAZON_HEALTH_REPORT, entry, this);
 
 		checkCount++;
 
 	}
 
 	@Override
-	public synchronized void config(final ConfigBean config) {
-		this.config = config;
+	public synchronized void configure(final ConfigBean config) {
+		this.configBean = config;
 	}
 
 	private AWSCredentials credentials() {
 
-		final String username = config.awsAccess();
-		final String password = config.awsSecret();
+		final String username = configBean.awsAccess();
+		final String password = configBean.awsSecret();
 
 		return new BasicAWSCredentials(username, password);
 
@@ -154,20 +179,21 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = config.bucket();
+			final String bucket = configBean.bucket();
 
 			final DeleteObjectRequest request = //
 			new DeleteObjectRequest(bucket, PathHelp.rootLessPath(path));
 
 			client.deleteObject(request);
 
-			setAvailable(true);
+			setAvailable(true, null);
 
 			return true;
 
 		} catch (final Exception e) {
 
-			processFailure(e);
+			setAvailable(true, e);
+
 			return false;
 
 		}
@@ -182,14 +208,14 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = config.bucket();
+			final String bucket = configBean.bucket();
 
 			final GetObjectRequest request = //
 			new GetObjectRequest(bucket, PathHelp.rootLessPath(path));
 
 			final ObjectMetadata result = client.getObject(request, file);
 
-			setAvailable(true);
+			setAvailable(true, null);
 
 			return true;
 
@@ -200,14 +226,15 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 				log.error("path={} code={}", path, e.getErrorCode());
 				break;
 			default:
-				processFailure(e);
+				setAvailable(true, e);
 				break;
 			}
 			return false;
 
 		} catch (final Exception e) {
 
-			processFailure(e);
+			setAvailable(false, e);
+
 			return false;
 
 		}
@@ -216,9 +243,9 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 	protected void processFailure(final Throwable e) {
 
-		reporter.requestFailedCount.inc();
+		failure = e;
 
-		setAvailable(false);
+		reporter.requestFailedCount.inc();
 
 		final String message = "" + e.getMessage();
 
@@ -242,60 +269,89 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = config.bucket();
+			final String bucket = configBean.bucket();
 
 			final PutObjectRequest request = //
 			new PutObjectRequest(bucket, PathHelp.rootLessPath(path), file);
 
 			final PutObjectResult result = client.putObject(request);
 
-			setAvailable(true);
+			setAvailable(true, null);
 
 			return true;
 
 		} catch (final Exception e) {
 
-			processFailure(e);
+			setAvailable(false, e);
+
 			return false;
 
 		}
 
 	}
 
-	protected boolean setAvailable(final boolean next) {
+	private String amazonId() {
+		return "[" + entry.configId() + "]";
+	}
 
-		final boolean past = isAvailable;
+	protected void setAvailable(final boolean nextAvailable, final Throwable e) {
 
-		isAvailable = next;
+		failure = e;
 
-		reporter.providerAvailable.value(isAvailable);
+		final boolean pastAvailable = isAvailable;
 
-		return past;
+		final boolean isChanged = pastAvailable ^ nextAvailable;
+
+		isAvailable = nextAvailable;
+
+		if (isChanged && isAvailable) {
+
+			log.warn("amazon became available : {}", amazonId());
+
+			mailer.sendAmazonReport(Report.AMAZON_AVAILABLE, entry, this);
+
+		}
+
+		if (isChanged && !isAvailable) {
+
+			log.error("amazon became unavailable : {}", amazonId());
+
+			mailer.sendAmazonReport(Report.AMAZON_UNAVAILABLE, entry, this);
+
+		}
 
 	}
 
 	@Override
 	public synchronized void ensure() {
-		stop();
-		start();
+
+		if (isRunning) {
+			stop();
+			start();
+		} else {
+			start();
+		}
+
 	}
+
+	private boolean isRunning;
 
 	@Override
 	public synchronized void start() {
 
-		if (config == null) {
+		if (configBean == null) {
 			throw new IllegalStateException("config is missing");
 		}
 
 		if (client == null) {
 			client = new AmazonS3Client(credentials());
-			client.setEndpoint(config.endpoint());
+			client.setEndpoint(configBean.endpoint());
 		} else {
 			// throw new IllegalStateException("client is present");
 		}
 
 		if (healthFuture == null) {
-			final int period = config.healthPeriod();
+			final int period = configBean.healthPeriod();
 			healthFuture = scheduler.scheduleAtFixedRate( //
 					healtTask, 0, period, TimeUnit.SECONDS);
 		} else {
@@ -303,6 +359,8 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 		}
 
 		checkCount = 0;
+
+		isRunning = true;
 
 		log.info("\n\t ### start");
 
@@ -325,6 +383,8 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 			client = null;
 		}
 
+		isRunning = false;
+
 		log.info("\n\t ### stop");
 
 	}
@@ -332,6 +392,13 @@ public class AmazonProvider implements AmazonService, AmazonManager {
 	@Override
 	public Reporter reporter() {
 		return reporter;
+	}
+
+	private Throwable failure;
+
+	@Override
+	public Throwable failure() {
+		return failure;
 	}
 
 }

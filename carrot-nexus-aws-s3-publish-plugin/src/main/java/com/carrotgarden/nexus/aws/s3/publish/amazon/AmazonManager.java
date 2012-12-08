@@ -8,15 +8,15 @@
 package com.carrotgarden.nexus.aws.s3.publish.amazon;
 
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
-import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 
-public interface AmazonManager {
+/**
+ * administrative view of amazon service
+ */
+public interface AmazonManager extends AmazonService {
 
-	void config(ConfigBean config);
+	void configure(ConfigBean configBean);
 
 	void ensure();
-
-	Reporter reporter();
 
 	void start();
 

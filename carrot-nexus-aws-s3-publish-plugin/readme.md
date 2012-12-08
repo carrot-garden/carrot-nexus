@@ -24,7 +24,7 @@ which ensures that pre-existing artifacts are also published;
 
 finally, when plug-in is **enabled** and amazon s3 bucket becomes unavailable for any reason,
 you will not be able to deploy or cache any artifacts in the affected/configured repositories,
-until that bucket becomes available again; bucket availability status is checked periodically;
+until that bucket becomes available again;
 
 ### repo
 
@@ -100,3 +100,10 @@ AWS Error Message: The AWS Access Key Id you provided does not exist in our reco
 S3 Extended Request ID: fMHxoVvODIa1DNqASSw4XPF9aBASw1Y+J8lHMxCgrYSvYJQ0LuU+WWowEjtvn0ip    
 at com.amazonaws.http.AmazonHttpClient.handleErrorRespon..
 ``` 
+
+enable plugin and try to upload artifact via nexus gui;
+
+if you receive the following message, your amazon credentials are incorrect:
+
+![upload error]
+(https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-02.png)

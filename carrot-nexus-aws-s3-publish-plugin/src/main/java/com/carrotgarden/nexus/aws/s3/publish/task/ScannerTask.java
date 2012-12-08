@@ -38,7 +38,8 @@ import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigCapability;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
-import com.carrotgarden.nexus.aws.s3.publish.mail.CarrotMailer;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.CarrotMailer;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.TaskReporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
@@ -123,13 +124,19 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 		reporter.newGauge("task state", new Gauge<String>() {
 			@Override
 			public String value() {
-				return getState();
+				return state();
+			}
+		});
+		reporter.newGauge("task failure", new Gauge<String>() {
+			@Override
+			public String value() {
+				return "" + failure;
 			}
 		});
 
 	}
 
-	private String getState() {
+	private String state() {
 		try {
 			final ScheduledTask<?> reference = //
 			TaskHelp.reference(scheduler, this);
@@ -156,19 +163,51 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 		getParameters().put(KEY_CONFIG_TYPE, type.name());
 	}
 
+	private Throwable failure;
+
+	public Throwable failure() {
+		return failure;
+	}
+
 	@Override
 	protected Object doRun() {
+
 		reporter.taskRunCount.inc();
+
+		boolean isSuccess = false;
+
 		try {
+			failure = null;
 			doWork();
+			isSuccess = true;
+			log.info("task success");
 		} catch (final InterruptedException e) {
+			failure = e;
 			log.debug("task cancel 1");
 		} catch (final TaskInterruptedException e) {
+			failure = e;
 			log.debug("task cancel 2");
 		} catch (final Exception e) {
-			log.error("task failed", e);
+			failure = e;
+			log.error("task failure", e);
 		}
+
+		log.info("\n{}", reporter.report());
+
+		if (isSuccess) {
+			mailer.sendScannerReport(Report.SCANNER_TASK_SUCCESS,
+					configEntry(), this);
+			mailer.sendScannerReport(Report.SCANNER_TASK_SUCCESS_REPORT,
+					configEntry(), this);
+		} else {
+			mailer.sendScannerReport(Report.SCANNER_TASK_FAILURE,
+					configEntry(), this);
+			mailer.sendScannerReport(Report.SCANNER_TASK_FAILURE_REPORT,
+					configEntry(), this);
+		}
+
 		return null;
+
 	}
 
 	private void doSleep(final long millis) {
@@ -180,6 +219,19 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 		}
 	}
 
+	private ConfigEntry configEntry() {
+
+		final CapabilityIdentity capaId = new CapabilityIdentity(configId());
+
+		final CapabilityReference reference = capaRegistry.get(capaId);
+
+		final ConfigEntry entry = reference
+				.capabilityAs(ConfigCapability.class);
+
+		return entry;
+
+	}
+
 	private void doWork() throws Exception {
 
 		reporter.reset();
@@ -189,12 +241,7 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 			return;
 		}
 
-		final CapabilityIdentity capaId = new CapabilityIdentity(configId());
-
-		final CapabilityReference reference = capaRegistry.get(capaId);
-
-		final ConfigEntry entry = reference
-				.capabilityAs(ConfigCapability.class);
+		final ConfigEntry entry = configEntry();
 
 		final String comboId = entry.comboId();
 
@@ -313,13 +360,6 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 			};
 
 			scanner.scan(root, listener);
-
-			final String report = reporter.report();
-
-			log.info("\n{}", report);
-
-			// TODO
-			// mailer.send(email, subject, message);
 
 		}
 

@@ -33,7 +33,8 @@ import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntryList;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigResolver;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigState;
-import com.carrotgarden.nexus.aws.s3.publish.mail.CarrotMailer;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.CarrotMailer;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.StorageReporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
 import com.yammer.metrics.Metrics;
@@ -85,32 +86,32 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 	}
 
 	@Override
-	public void storeItem(final Repository repository, final StorageItem itemAny)
+	public void storeItem(final Repository repo, final StorageItem any)
 			throws UnsupportedStorageOperationException, LocalStorageException {
 
-		final boolean isFileItem = itemAny instanceof StorageFileItem;
+		final boolean isFileItem = any instanceof StorageFileItem;
 
 		if (!isFileItem) {
 			reporter.amazonIgnoredFileCount.inc();
-			super.storeItem(repository, itemAny);
+			super.storeItem(repo, any);
 			return;
 		}
 
 		try {
 
-			final String repoId = repository.getId();
+			final String repoId = repo.getId();
 
-			final StorageFileItem item = (StorageFileItem) itemAny;
+			final StorageFileItem item = (StorageFileItem) any;
 
 			final ResourceStoreRequest request = item.getResourceStoreRequest();
 
-			final File file = getFileFromBase(repository, request);
+			final File file = getFileFromBase(repo, request);
 
 			reporter.repoFilePeek.add(file);
 
 			/** store local */
 
-			super.storeItem(repository, item);
+			super.storeItem(repo, item);
 
 			/** store all remote */
 
@@ -132,16 +133,25 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 					final AmazonService amazonService = entry.amazonService();
 
 					isSaved &= AmazonHelp.storeItem( //
-							amazonService, repository, item, file, log);
+							amazonService, repo, item, file, log);
 
 					if (isSaved) {
+
 						reporter.amazonPublishedFileCount.inc();
 						reporter.amazonPublishedFileSize.inc(file.length());
+
+						mailer.sendDeployReport(//
+								Report.DEPLOY_SUCCESS, entry, repo, item);
+
 						continue;
+
 					} else {
-						// TODO
-						// mailer.send(email, subject, message);
+
+						mailer.sendDeployReport(//
+								Report.DEPLOY_FAILURE, entry, repo, item);
+
 						break;
+
 					}
 
 				} else {
@@ -158,7 +168,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 			}
 
 			/** revert local */
-			super.shredItem(repository, request);
+			super.shredItem(repo, request);
 
 			throw new LocalStorageException("amazon provider failure");
 

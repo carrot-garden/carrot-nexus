@@ -9,6 +9,8 @@
 -->
 <project default="maven" basedir="./..">
 
+	<!-- install local nexus for manual testing -->
+
 	<echo message="basedir : ${basedir}" />
 
 	<property name="distro-id" value="nexus-2.2-01" />

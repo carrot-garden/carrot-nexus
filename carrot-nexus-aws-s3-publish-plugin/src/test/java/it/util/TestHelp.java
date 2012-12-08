@@ -12,11 +12,15 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.test.utils.FileTestingUtils;
 
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigDescriptor;
 
 public class TestHelp {
+
+	protected static final Logger log = LoggerFactory.getLogger(TestHelp.class);
 
 	public static boolean isOrdered(final long... source) {
 		final long[] target = source.clone();
@@ -35,9 +39,9 @@ public class TestHelp {
 			public boolean isReady() {
 				return false;
 			}
-	
+
 		};
-		sleep(millis, 1, never);
+		sleep(millis, 10, never);
 	}
 
 	public static void sleep(final long millis, final int steps,
@@ -47,6 +51,7 @@ public class TestHelp {
 				return;
 			}
 			try {
+				log.info("sleep {}/{}", k * millis / steps, millis);
 				Thread.sleep(millis / steps);
 			} catch (final Exception e) {
 				return;
@@ -60,17 +65,17 @@ public class TestHelp {
 
 	/** config file with amazon access */
 	public static File configFile() {
-	
+
 		final String home = System.getProperty("user.home");
-	
+
 		final File folder = new File(home, ".amazon/carrotgarden");
-	
+
 		final File file = new File(folder, ConfigDescriptor.NAME + ".conf");
-	
+
 		assertTrue(file.exists());
-	
+
 		return file;
-	
+
 	}
 
 }

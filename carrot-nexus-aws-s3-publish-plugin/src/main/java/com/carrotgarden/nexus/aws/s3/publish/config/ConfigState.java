@@ -12,8 +12,6 @@ package com.carrotgarden.nexus.aws.s3.publish.config;
  */
 public enum ConfigState {
 
-	INIT, //
-
 	ADDED, //
 
 	ENABLED, //

@@ -10,14 +10,14 @@ package com.carrotgarden.nexus.aws.s3.publish.metrics;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonProvider;
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonServiceProvider;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Gauge;
 import com.yammer.metrics.core.MetricsRegistry;
 
 /**
- * {@link AmazonProvider} reporter
+ * {@link AmazonServiceProvider} reporter
  */
 @Named("amazon")
 public class AmazonReporter extends BaseReporter {
@@ -29,7 +29,6 @@ public class AmazonReporter extends BaseReporter {
 	public final Counter requestCheckCount;
 	public final Counter requestFailedCount;
 	public final Counter publishedFileSize;
-	public final PeekValueGuage<Boolean> providerAvailable = new PeekValueGuage<Boolean>();
 
 	@Inject
 	public AmazonReporter( //
@@ -52,8 +51,6 @@ public class AmazonReporter extends BaseReporter {
 		publishedFileSize = newCounter("published file size");
 
 		//
-
-		newGauge("provider is available", providerAvailable);
 
 		newGauge("estimated amazon monthly storage cost", new Gauge<Double>() {
 			@Override

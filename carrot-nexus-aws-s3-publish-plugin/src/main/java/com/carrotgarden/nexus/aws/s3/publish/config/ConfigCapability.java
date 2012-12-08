@@ -7,8 +7,9 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
@@ -17,7 +18,6 @@ import javax.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.plugins.capabilities.Capability;
-import org.sonatype.nexus.plugins.capabilities.CapabilityIdentity;
 import org.sonatype.nexus.plugins.capabilities.CapabilityRegistry;
 import org.sonatype.nexus.plugins.capabilities.Condition;
 import org.sonatype.nexus.plugins.capabilities.internal.condition.NexusIsActiveCondition;
@@ -28,10 +28,11 @@ import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
 import org.sonatype.nexus.proxy.repository.Repository;
 import org.sonatype.sisu.goodies.eventbus.EventBus;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonProvider;
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonFactory;
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonManager;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.condition.ConditionFactory;
-import com.carrotgarden.nexus.aws.s3.publish.condition.ManagedCondition;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.task.TaskManager;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
@@ -52,36 +53,36 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	private final CapabilityRegistry capaRegistry;
 	private final RepositoryRegistry repoRegistry;
 	private final TaskManager taskManager;
-	private final AmazonProvider amazonProvider;
-	private final ManagedCondition conditionRepoAll;
 	private final NexusIsActiveCondition nexusCondition;
+	private final AmazonFactory amazonFactory;
+	private final AmazonManager amazonManager;
 
 	private volatile ConfigBean configBean;
 	private volatile ConfigState configState;
 
 	@Inject
 	public ConfigCapability( //
+			final AmazonFactory amazonFactory, //
 			@Named("base") final Reporter reporter, //
 			@Named("maven2") final GavCalculator calculator, //
 			final CapabilityRegistry capaRegistry, //
 			final NexusIsActiveCondition nexusCondition, //
-			final AmazonProvider amazonProvider, //
 			final TaskManager scannerManager, //
 			final RepositoryRegistry repoRegistry, //
 			final EventBus eventBus, //
-			final ConditionFactory factory //
+			final ConditionFactory conditionFactory //
 	) {
 
+		this.amazonFactory = amazonFactory;
 		this.reporter = reporter;
 		this.calculator = calculator;
 		this.capaRegistry = capaRegistry;
 		this.nexusCondition = nexusCondition;
-		this.amazonProvider = amazonProvider;
 		this.taskManager = scannerManager;
 		this.repoRegistry = repoRegistry;
 		this.eventBus = eventBus;
 
-		conditionRepoAll = factory.managed("repo-all");
+		amazonManager = amazonFactory.create(this);
 
 	}
 
@@ -99,7 +100,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	@Override
 	public AmazonService amazonService() {
-		return amazonProvider;
+		return amazonManager;
 	}
 
 	@Override
@@ -109,15 +110,39 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	private Pattern excludePattern;
 
+	private void excludePattern(final String pattern) {
+
+		excludePattern = excludeDefault();
+
+	}
+
+	private Pattern excludeDefault() {
+		try {
+			final String pattern = //
+			ConfigHelp.reference().getString("exclude-pattern");
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			log.error("should not happen", e);
+			return null;
+		}
+	}
+
+	private Pattern excludeCaclulated(final String pattern) {
+		try {
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			log.error("invalid pattern, using default", e);
+			return excludeDefault();
+		}
+	}
+
 	@Override
 	public boolean isExcluded(final String path) {
 
 		/** pattern */
 
-		if (configBean.enableExclude()) {
-			if (excludePattern.matcher(path).matches()) {
-				return true;
-			}
+		if (excludePattern.matcher(path).matches()) {
+			return true;
 		}
 
 		/** GAV */
@@ -142,27 +167,57 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	}
 
+	private Set<Report> reportSubscribeSet;
+
+	@Override
+	public Set<Report> reportSubscribeSet() {
+
+		return reportSubscribeSet;
+
+	}
+
+	private void reportSubscribeSet(final String reportText) {
+
+		reportSubscribeSet = Report.reportSet(reportText);
+
+	}
+
+	@Override
+	public boolean isSubscribed(final Report report) {
+
+		if (!configBean.enableEmail()) {
+			return false;
+		}
+
+		return reportSubscribeSet.contains(report);
+
+	}
+
+	private List<String> reportEmailList;
+
+	private void reportEmailList(final String addressText) {
+
+		final String separator = //
+		ConfigHelp.reference().getString("string-list-separator");
+
+		final String[] addressArray = addressText.split(separator);
+
+		reportEmailList = new ArrayList<String>();
+
+		for (final String address : addressArray) {
+			reportEmailList.add(address.trim());
+		}
+
+	}
+
+	@Override
+	public List<String> reportEmailList() {
+
+		return reportEmailList;
+
+	}
+
 	//
-
-	private Pattern defaultPattern() {
-		try {
-			final String pattern = ConfigHelp.reference().getString(
-					"form-field-bundle.exclude-pattern.default-value");
-			return Pattern.compile(pattern);
-		} catch (final Exception e) {
-			log.error("should not happen", e);
-			return null;
-		}
-	}
-
-	private Pattern excludePattern(final String pattern) {
-		try {
-			return Pattern.compile(pattern);
-		} catch (final Exception e) {
-			log.error("invalid pattern, using default", e);
-			return defaultPattern();
-		}
-	}
 
 	/** render config status page */
 	@Override
@@ -175,7 +230,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			Reporter.DEFAULT.report(text, "global");
 
-			amazonProvider.reporter().report(text, "amazon provider");
+			amazonManager.reporter().report(text, "amazon provider");
 
 			taskManager.report(text, configId());
 
@@ -205,56 +260,22 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 		switch (configState) {
 
-		/** not used */
-		case INIT:
-
-			/** hack to populate default properties */
-
-			final String date = "[" + new Date() + "]";
-
-			final CapabilityIdentity id = context().id();
-			final boolean enabled = false;
-			final String notes;
-			if (context().notes() == null) {
-				notes = date;
-			} else {
-				notes = context().notes() + " " + date;
-			}
-
-			final Map<String, String> properties = Form
-					.propsDefaultWithOverride(context().properties());
-
-			configBean = new ConfigBean(properties);
-
-			new Thread() {
-				@Override
-				public void run() {
-					try {
-						capaRegistry.update(id, enabled, notes, properties);
-					} catch (final Exception e) {
-						log.error("", e);
-					}
-				}
-			}.start();
-
-			break;
-
 		case ADDED:
 
 			configBean = new ConfigBean(context().properties());
 
-			amazonProvider.config(configBean);
+			excludePattern(configBean.excludePattern());
 
-			excludePattern = excludePattern(configBean.excludePattern());
+			reportEmailList(configBean.emailAddress());
+			reportSubscribeSet(configBean.emailReports());
 
-			conditionRepoAll.setSatisfied( //
-					RepoHelp.isRepoAll(configBean.comboId()));
+			amazonManager.configure(configBean);
 
 			break;
 
 		case ENABLED:
 
-			amazonProvider.ensure();
+			amazonManager.ensure();
 
 			taskManager.ensureTasks(configId(), configBean);
 
@@ -264,7 +285,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			taskManager.cancelTasks(configId());
 
-			amazonProvider.stop();
+			amazonManager.stop();
 
 			break;
 
@@ -290,7 +311,6 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	@Override
 	public void onCreate() throws Exception {
-		// configState(ConfigState.INIT);
 		configState(ConfigState.ADDED);
 	}
 
@@ -323,23 +343,17 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	@Override
 	public void onActivate() throws Exception {
-		if (configState == ConfigState.INIT) {
-			return; // stay in INIT
-		}
 		configState(ConfigState.ENABLED);
 	}
 
 	@Override
 	public void onPassivate() throws Exception {
-		if (configState == ConfigState.INIT) {
-			return; // stay in INIT
-		}
 		configState(ConfigState.DISABLED);
 	}
 
 	private String repoName() {
 
-		if ("*".equals(comboId())) {
+		if (RepoHelp.REPO_ID_ALL.equals(comboId())) {
 			return "All Repositories";
 		}
 

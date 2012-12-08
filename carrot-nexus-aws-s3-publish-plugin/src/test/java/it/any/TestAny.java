@@ -27,16 +27,16 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.maven.index.artifact.Gav;
 import org.apache.maven.index.artifact.M2GavCalculator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingRequest;
+import org.apache.maven.wagon.Wagon;
+import org.apache.maven.wagon.providers.http.LightweightHttpWagon;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockito.Mockito;
 import org.sonatype.inject.BeanScanning;
 import org.sonatype.nexus.bundle.launcher.NexusBundle;
 import org.sonatype.nexus.bundle.launcher.NexusBundleConfiguration;
@@ -47,20 +47,24 @@ import org.sonatype.nexus.client.rest.BaseUrl;
 import org.sonatype.nexus.client.rest.NexusClientFactory;
 import org.sonatype.nexus.client.rest.UsernamePasswordAuthenticationInfo;
 import org.sonatype.nexus.integrationtests.NexusRestClient;
+import org.sonatype.nexus.integrationtests.TestContainer;
 import org.sonatype.nexus.integrationtests.TestContext;
 import org.sonatype.nexus.plugins.capabilities.internal.rest.dto.CapabilityListItemResource;
 import org.sonatype.nexus.plugins.capabilities.internal.rest.dto.CapabilityResource;
 import org.sonatype.nexus.test.utils.DeployUtils;
 import org.sonatype.nexus.test.utils.EventInspectorsUtil;
+import org.sonatype.nexus.test.utils.WagonDeployer;
 import org.sonatype.nexus.testsuite.support.NexusRunningITSupport;
 import org.sonatype.nexus.testsuite.support.NexusStartAndStopStrategy;
 import org.sonatype.sisu.maven.bridge.MavenModelResolver;
 import org.sonatype.sisu.maven.bridge.support.ModelBuildingRequestBuilder;
 
-import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonProvider;
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonFactory;
+import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonManager;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigDescriptor;
+import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
 import com.carrotgarden.nexus.aws.s3.publish.config.Form;
 
 @RunWith(Parameterized.class)
@@ -68,8 +72,6 @@ import com.carrotgarden.nexus.aws.s3.publish.config.Form;
 public abstract class TestAny extends NexusRunningITSupport {
 
 	protected final static M2GavCalculator gavCalc = new M2GavCalculator();
-
-	protected static final Logger log = LoggerFactory.getLogger(TestAny.class);
 
 	private static final String repoId = "releases";
 
@@ -88,10 +90,11 @@ public abstract class TestAny extends NexusRunningITSupport {
 
 	}
 
-	@Inject
-	private AmazonProvider amazonProvider;
+	// @Inject
+	// private NexusEmailer nexusEmailer;
 
-	private boolean amazonProviderIsNew = true;
+	@Inject
+	private AmazonFactory amazonFactory;
 
 	@Inject
 	@Named("remote-model-resolver-using-settings")
@@ -108,22 +111,30 @@ public abstract class TestAny extends NexusRunningITSupport {
 		super(nexusBundleCoordinates);
 	}
 
+	private AmazonManager amazonProvider;
+
 	/** testing amazon service with bucket access */
 	protected AmazonService amazonService() {
 
-		if (amazonProviderIsNew) {
+		if (amazonProvider == null) {
+
+			final ConfigEntry configEntry = Mockito.mock(ConfigEntry.class);
+
+			Mockito.when(configEntry.configId()).thenReturn("tester");
+
+			amazonProvider = amazonFactory.create(configEntry);
 
 			final File file = TestHelp.configFile();
 
 			final Map<String, String> props = Form.propsFrom(file);
 
-			final ConfigBean config = new ConfigBean(props);
+			final ConfigBean configBean = new ConfigBean(props);
 
-			amazonProvider.config(config);
+			// log.info("### configBean : \n{}", configBean);
 
-			amazonProvider.start();
+			amazonProvider.configure(configBean);
 
-			amazonProviderIsNew = false;
+			amazonProvider.ensure();
 
 			final Ready ready = new Ready() {
 				@Override
@@ -132,7 +143,7 @@ public abstract class TestAny extends NexusRunningITSupport {
 				}
 			};
 
-			TestHelp.sleep(1 * 1000, ready);
+			TestHelp.sleep(3 * 1000, ready);
 
 		}
 
@@ -173,20 +184,6 @@ public abstract class TestAny extends NexusRunningITSupport {
 		capabilities().update(item);
 
 		inspector().waitForCalmPeriod(500);
-
-	}
-
-	/** configuration with amazon access */
-	protected void applyConfigCustom(final boolean enable) throws Exception {
-
-		applyConfig(enable, Form.propsFrom(TestHelp.configFile()));
-
-	}
-
-	/** default configuration with NO amazon access */
-	protected void applyConfigDefault(final boolean enable) throws Exception {
-
-		applyConfig(enable, Form.propsDefault());
 
 	}
 
@@ -240,6 +237,8 @@ public abstract class TestAny extends NexusRunningITSupport {
 
 		configuration.addPlugins(bundleFile());
 
+		/** */
+
 		return configuration;
 
 	}
@@ -266,7 +265,9 @@ public abstract class TestAny extends NexusRunningITSupport {
 
 		//
 
-		final TestContext context = new TestContext();
+		final TestContext context = TestContainer.getInstance()
+				.getTestContext();
+
 		context.setSecureTest(true);
 		context.setNexusUrl(url.toString());
 		context.setUsername(username);
@@ -282,17 +283,37 @@ public abstract class TestAny extends NexusRunningITSupport {
 		deploy(path, fileSource(path));
 	}
 
+	protected String repoUrl() {
+		return nexus().getUrl() + "content/repositories/" + repoId() + "/";
+	}
+
 	/** deploy via rest */
 	protected void deploy(final String path, final File file) throws Exception {
+
 		assertNotNull(path);
 		assertNotNull(file);
 		assertTrue(file.exists());
-		final Gav gav = gavCalc.pathToGav(path);
-		deployer().deployUsingGavWithRest(repoId(), gav, file);
+
+		// final Gav gav = gavCalc.pathToGav(path);
+		// deployer().deployUsingGavWithRest(repoId(), gav, file);
+
+		deployer().deployWithWagon("http", repoUrl(), file, path);
+
 	}
 
 	protected DeployUtils deployer() {
-		return new DeployUtils(nexusRestletClient);
+
+		final WagonDeployer.Factory wagonFactory = new WagonDeployer.Factory() {
+
+			@Override
+			public Wagon get(final String protocol) {
+				return new LightweightHttpWagon();
+			}
+
+		};
+
+		return new DeployUtils(nexusRestletClient, wagonFactory);
+
 	}
 
 	/** attribute file in repository */

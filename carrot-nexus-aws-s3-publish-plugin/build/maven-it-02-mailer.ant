@@ -31,7 +31,7 @@
 			<arg value="it-02" />
 
 			<arg value="--define" />
-			<arg value="it.test=TestDeploy,TestScanner,TestMailer" />
+			<arg value="it.test=TestMailer" />
 
 		</exec>
 

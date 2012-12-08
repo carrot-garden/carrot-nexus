@@ -199,7 +199,7 @@ public class Form {
 	 */
 	public static Map<String, String> propsFrom(final File file) {
 
-		final Config root = ConfigFactory.parseFile(file);
+		final Config root = ConfigFactory.parseFile(file).resolve();
 
 		return propsFrom(root);
 

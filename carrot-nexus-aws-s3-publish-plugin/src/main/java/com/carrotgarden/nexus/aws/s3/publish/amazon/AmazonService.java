@@ -9,6 +9,11 @@ package com.carrotgarden.nexus.aws.s3.publish.amazon;
 
 import java.io.File;
 
+import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
+
+/**
+ * public view of amazon service
+ */
 public interface AmazonService {
 
 	/** @return last amazon health check status */
@@ -24,5 +29,11 @@ public interface AmazonService {
 
 	/** save file to s3 */
 	boolean save(String path, File file);
+
+	//
+
+	Reporter reporter();
+
+	Throwable failure();
 
 }
