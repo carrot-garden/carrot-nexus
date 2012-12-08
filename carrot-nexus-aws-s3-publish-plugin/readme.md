@@ -82,7 +82,7 @@ when in doubt, please check ```nexus.version``` and ```nexus-capabilities.versio
 of the currently downloaded plug-in bundle; 
 
 plug-in convention is such, that in plug-in version ```2.2.1-build002``` 
--> ```2.2.1``` means the base nexus version the plug-in is built against;  
+the ```2.2.1``` means the base nexus version the plug-in is built against;  
 
 ### troubleshoot
 
