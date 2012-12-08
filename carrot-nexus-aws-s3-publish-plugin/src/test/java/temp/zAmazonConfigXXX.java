@@ -11,11 +11,11 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
 
-public class AmazonConfig {
+public class zAmazonConfigXXX {
 
 	private final ConfigBean configBean;
 
-	public AmazonConfig(final ConfigBean configBean) {
+	public zAmazonConfigXXX(final ConfigBean configBean) {
 		this.configBean = configBean;
 	}
 

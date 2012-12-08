@@ -42,7 +42,7 @@ public class TaskManager {
 	private final Counter metricsEnsureCount;
 
 	@Inject
-	public TaskManager(//
+	public TaskManager( //
 			final BaseReporter reporter, //
 			final NexusScheduler scheduler //
 	) {
@@ -75,16 +75,12 @@ public class TaskManager {
 
 	}
 
-	private String defaultPattern() {
-		return ConfigHelp.reference().getString(
-				"form-field-bundle.scanner-schedule.default-value");
-	}
-
-	private CronSchedule scheduleDefault() {
+	protected static CronSchedule scheduleDefault() {
 		try {
-			return new CronSchedule(defaultPattern());
+			final String pattern = ConfigHelp.reference().getString(
+					"form-field-bundle.scanner-schedule.default-value");
+			return new CronSchedule(pattern);
 		} catch (final Exception e) {
-			log.error("should not happen", e);
 			return null;
 		}
 	}

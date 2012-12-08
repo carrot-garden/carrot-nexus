@@ -89,10 +89,9 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 				+ ConfigHelp.reference().getString("plugin-name") + ")";
 	}
 
-	private final CapabilityRegistry capaRegistry;
-
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
+	private final CapabilityRegistry capaRegistry;
 	private final RepositoryRegistry repoRegistry;
 	private final Scanner scanner;
 	private final TaskReporter reporter;
@@ -245,7 +244,7 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 
 		final String comboId = entry.comboId();
 
-		final AmazonService amazonService = entry.amazonService();
+		final AmazonService service = entry.amazonService();
 
 		final List<String> repoList = RepoHelp.repoList(repoRegistry, comboId);
 
@@ -272,8 +271,8 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 				@Override
 				public void onEnd() {
 
-					log.info("repo stats : total={} success={}",
-							reporter.amazonPublishedFileSize.count(),
+					log.info("repo stats : processed={} published={}",
+							reporter.fileCount.count(),
 							reporter.amazonPublishedFileCount.count());
 					log.info("repo scan done : {} {}", configId(), repoId);
 					log.info("##########################################");
@@ -283,12 +282,11 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 				public void onFile(final File file) {
 					try {
 
-						reporter.repoFilePeek.add(file);
-
-						reporter.fileRate.mark();
-						reporter.fileCount.inc();
-
 						checkInterruption();
+
+						reporter.fileCount.inc();
+						reporter.fileRate.mark();
+						reporter.repoFilePeek.add(file);
 
 						final String path = //
 						PathHelp.rootFullPath(PathHelp.relativePath(root, file));
@@ -297,8 +295,6 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 							reporter.amazonIgnoredFileCount.inc();
 							return;
 						}
-
-						reporter.repoFileSize.inc(file.length());
 
 						final ResourceStoreRequest request = //
 						new ResourceStoreRequest(path);
@@ -311,8 +307,11 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 						final boolean isFile = any instanceof StorageFileItem;
 
 						if (!isFile) {
+							reporter.amazonIgnoredFileCount.inc();
 							return;
 						}
+
+						reporter.repoFileSize.inc(file.length());
 
 						final StorageFileItem item = (StorageFileItem) any;
 
@@ -323,20 +322,22 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 								.get(CarrotAttribute.ATTR_IS_SAVED);
 
 						if ("true".equals(value)) {
+							reporter.amazonIgnoredFileCount.inc();
 							return;
 						}
 
 						int countSleep = 0;
 
+						/** block till bucket available */
 						while (true) {
 
 							final boolean isSaved = AmazonHelp.storeItem(
-									amazonService, repo, item, file, log);
+									service, repo, item, file, log);
 
 							if (isSaved) {
 								reporter.amazonPublishedFileCount.inc();
-								reporter.amazonPublishedFileSize.inc(file
-										.length());
+								reporter.amazonPublishedFileSize.inc(//
+										file.length());
 								break;
 							} else {
 								reporter.amazonRetriedFileCount.inc();

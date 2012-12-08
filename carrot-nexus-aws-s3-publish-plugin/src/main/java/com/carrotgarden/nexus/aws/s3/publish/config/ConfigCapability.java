@@ -121,13 +121,12 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	}
 
-	private Pattern excludeDefault() {
+	protected static Pattern excludeDefault() {
 		try {
 			final String pattern = //
 			ConfigHelp.reference().getString("exclude-pattern");
 			return Pattern.compile(pattern);
 		} catch (final Exception e) {
-			log.error("should not happen", e);
 			return null;
 		}
 	}
@@ -358,7 +357,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	private String repoName() {
 
-		if (RepoHelp.REPO_ID_ALL.equals(comboId())) {
+		if (RepoHelp.isRepoAll(comboId())) {
 			return "All Repositories";
 		}
 
@@ -366,9 +365,9 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 		if (repo == null) {
 			return "<invalid>";
+		} else {
+			return repo.getName();
 		}
-
-		return repo().getName();
 
 	}
 

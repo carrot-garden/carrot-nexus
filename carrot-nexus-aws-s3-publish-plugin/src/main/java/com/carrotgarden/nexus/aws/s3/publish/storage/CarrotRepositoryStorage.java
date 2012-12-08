@@ -132,10 +132,10 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 						continue;
 					}
 
-					final AmazonService amazonService = entry.amazonService();
+					final AmazonService service = entry.amazonService();
 
 					isSaved &= AmazonHelp.storeItem( //
-							amazonService, repo, item, file, log);
+							service, repo, item, file, log);
 
 					if (isSaved) {
 

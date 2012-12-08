@@ -59,7 +59,9 @@ public class AmazonHelp {
 
 	//
 
-	/** store existing item to amazon */
+	/**
+	 * store existing item to amazon
+	 */
 	public static boolean storeItem( //
 			final AmazonService amazonService, //
 			final Repository repository, //

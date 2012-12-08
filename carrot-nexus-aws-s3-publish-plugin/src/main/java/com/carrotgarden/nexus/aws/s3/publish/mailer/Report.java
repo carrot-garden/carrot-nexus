@@ -44,19 +44,24 @@ public enum Report {
 
 	private final static Logger log = LoggerFactory.getLogger(Report.class);
 
-	public static Report from(final String code) {
+	public static Report from(final String name) {
 		for (final Report known : values()) {
-			if (known.code.equalsIgnoreCase(code.trim())) {
+			if (known.name.equalsIgnoreCase(name.trim())) {
 				return known;
 			}
 		}
 		return UNKNOWN;
 	}
 
-	public final String code;
+	/**
+	 * report name
+	 * <p>
+	 * see reference.conf
+	 */
+	public final String name;
 
-	Report(final String code) {
-		this.code = code;
+	Report(final String name) {
+		this.name = name;
 	}
 
 	public static Set<Report> reportSet(final String codeList) {
@@ -70,14 +75,14 @@ public enum Report {
 		final String separator = //
 		ConfigHelp.reference().getString("text-area-list-separator");
 
-		final String[] codeArray = codeList.split(separator);
+		final String[] nameArray = codeList.split(separator);
 
-		for (final String code : codeArray) {
+		for (final String name : nameArray) {
 
-			final Report report = from(code);
+			final Report report = from(name);
 
 			if (report == UNKNOWN) {
-				log.error("unknown report code : {}", code);
+				log.error("unknown report name : {}", name);
 				continue;
 			}
 
@@ -86,20 +91,6 @@ public enum Report {
 		}
 
 		return reportSet;
-
-	}
-
-	/** validate configuration */
-	static {
-
-		final String codeList = ConfigHelp.reference().getString(
-				"form-field-bundle.email-reports.default-value");
-
-		final Set<Report> reportList = reportSet(codeList);
-
-		if (reportList.size() != (values().length - 1)) {
-			throw new IllegalStateException("reference.conf error");
-		}
 
 	}
 

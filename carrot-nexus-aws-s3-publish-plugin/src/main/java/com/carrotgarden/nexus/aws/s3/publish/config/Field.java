@@ -78,21 +78,26 @@ public enum Field {
 			final String regex //
 	);
 
-	public final String code;
+	/**
+	 * {@link FormField#getType() }
+	 * <p>
+	 * see reference.conf
+	 */
+	public final String type;
 
-	Field(final String code) {
-		this.code = code;
+	Field(final String type) {
+		this.type = type;
 	}
 
-	public static Field from(final String code) {
+	public static Field from(final String type) {
 
 		for (final Field known : Field.values()) {
-			if (known.code.equalsIgnoreCase(code)) {
+			if (known.type.equalsIgnoreCase(type)) {
 				return known;
 			}
 		}
 
-		log.error("wrong field code", new Exception("" + code));
+		log.error("wrong field type", new Exception("" + type));
 
 		return STRING;
 
