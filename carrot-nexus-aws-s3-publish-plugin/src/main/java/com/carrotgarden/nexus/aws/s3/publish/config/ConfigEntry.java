@@ -22,6 +22,9 @@ public interface ConfigEntry {
 	/** current capability life cycle state */
 	ConfigState configState();
 
+	/** compare against state */
+	boolean isConfigState(ConfigState state);
+
 	/** amazon provider serving this capability */
 	AmazonService amazonService();
 

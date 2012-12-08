@@ -76,6 +76,8 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 		this.mailer = mailer;
 		this.resolver = resolver;
+
+		/** use global for now */
 		this.reporter = new StorageReporter(Metrics.defaultRegistry());
 
 	}
@@ -123,7 +125,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 			for (final ConfigEntry entry : entryList) {
 
-				if (ConfigState.ENABLED == entry.configState()) {
+				if (entry.isConfigState(ConfigState.ENABLED)) {
 
 					if (entry.isExcluded(path)) {
 						reporter.amazonIgnoredFileCount.inc();
@@ -140,14 +142,14 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 						reporter.amazonPublishedFileCount.inc();
 						reporter.amazonPublishedFileSize.inc(file.length());
 
-						mailer.sendDeployReport(//
+						mailer.sendDeployReport( //
 								Report.DEPLOY_SUCCESS, entry, repo, item);
 
 						continue;
 
 					} else {
 
-						mailer.sendDeployReport(//
+						mailer.sendDeployReport( //
 								Report.DEPLOY_FAILURE, entry, repo, item);
 
 						break;
@@ -156,7 +158,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 				} else {
 
-					/** no stats */
+					/** no stats for disabled */
 					continue;
 
 				}

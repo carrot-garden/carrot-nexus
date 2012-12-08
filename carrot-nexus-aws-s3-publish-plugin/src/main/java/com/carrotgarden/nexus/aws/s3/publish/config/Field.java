@@ -85,12 +85,17 @@ public enum Field {
 	}
 
 	public static Field from(final String code) {
+
 		for (final Field known : Field.values()) {
 			if (known.code.equalsIgnoreCase(code)) {
 				return known;
 			}
 		}
+
 		log.error("wrong field code", new Exception("" + code));
+
 		return STRING;
+
 	}
+
 }

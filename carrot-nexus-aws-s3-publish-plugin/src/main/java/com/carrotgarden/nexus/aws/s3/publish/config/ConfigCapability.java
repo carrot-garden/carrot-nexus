@@ -99,6 +99,11 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	}
 
 	@Override
+	public boolean isConfigState(final ConfigState state) {
+		return configState == state;
+	}
+
+	@Override
 	public AmazonService amazonService() {
 		return amazonManager;
 	}
@@ -378,7 +383,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	@Override
 	public String description() {
 
-		return "Publish[" + configId() + "] " + repoName();
+		return "Publish [" + configId() + "] " + repoName();
 
 	}
 

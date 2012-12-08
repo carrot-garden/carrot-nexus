@@ -28,6 +28,9 @@ import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Gauge;
 
+/**
+ * replace local storage
+ */
 @Singleton
 @Named(CarrotRepositoryCustomizer.NAME)
 public class CarrotRepositoryCustomizer implements RepositoryCustomizer {

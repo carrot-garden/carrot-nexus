@@ -17,7 +17,7 @@ import org.sonatype.nexus.plugins.capabilities.CapabilityType;
 import org.sonatype.nexus.plugins.capabilities.support.CapabilityDescriptorSupport;
 
 /**
- * capability config form
+ * capability configuration form
  */
 @Singleton
 @Named(ConfigDescriptor.NAME)
