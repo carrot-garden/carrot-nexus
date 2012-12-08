@@ -12,8 +12,6 @@
 
 bin/
 target/
-logs/
 
 release.properties
 pom.xml.*
-

@@ -106,3 +106,24 @@ your amazon credentials are likely incorrect:
 
 ![upload error]
 (https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/readme-02.png)
+
+### build your own
+
+```
+#!/bin/bash
+#
+# work home
+cd /tmp
+# clone repo
+git clone git@github.com:carrot-garden/carrot-nexus.git
+# select repo
+cd carrot-nexus
+# select project
+cd carrot-nexus-aws-s3-publish-plugin
+# produce bundle
+mvn clean install
+# review result
+cd target
+ls -las *-bundle.zip
+# 
+```
