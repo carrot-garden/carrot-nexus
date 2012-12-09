@@ -115,9 +115,18 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	private Pattern excludePattern;
 
-	private void excludePattern(final String pattern) {
+	private void excludePattern(final ConfigBean configBean) {
 
-		excludePattern = excludeDefault();
+		if (configBean.enableExclude()) {
+			final String defaultPattern = excludeDefault().pattern();
+			final String customPattern = configBean.excludePattern();
+			final String resultPattern = defaultPattern + "|" + customPattern;
+			excludePattern = excludeCustom(resultPattern);
+		} else {
+			excludePattern = excludeDefault();
+		}
+
+		log.debug("excludePattern : {}", excludePattern);
 
 	}
 
@@ -131,7 +140,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 		}
 	}
 
-	private Pattern excludeCaclulated(final String pattern) {
+	private Pattern excludeCustom(final String pattern) {
 		try {
 			return Pattern.compile(pattern);
 		} catch (final Exception e) {
@@ -268,7 +277,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			configBean = new ConfigBean(context().properties());
 
-			excludePattern(configBean.excludePattern());
+			excludePattern(configBean);
 
 			reportEmailList(configBean.emailAddress());
 			reportSubscribeSet(configBean.emailReports());

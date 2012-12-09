@@ -48,4 +48,8 @@ public class ConfigHelp {
 
 	}
 
+	public static String pluginName() {
+		return reference().getString("plugin-name");
+	}
+
 }

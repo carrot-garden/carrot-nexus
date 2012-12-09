@@ -7,14 +7,15 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.task;
 
+import static com.carrotgarden.nexus.aws.s3.publish.util.PathHelp.*;
+
 import java.io.File;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.plugins.capabilities.CapabilityIdentity;
 import org.sonatype.nexus.plugins.capabilities.CapabilityReference;
 import org.sonatype.nexus.plugins.capabilities.CapabilityRegistry;
@@ -29,9 +30,6 @@ import org.sonatype.nexus.scheduling.NexusScheduler;
 import org.sonatype.scheduling.ScheduledTask;
 import org.sonatype.scheduling.TaskInterruptedException;
 import org.sonatype.scheduling.TaskState;
-import org.sonatype.sisu.resource.scanner.Listener;
-import org.sonatype.sisu.resource.scanner.Scanner;
-import org.sonatype.sisu.resource.scanner.helper.ListenerSupport;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.attribute.CarrotAttribute;
@@ -41,9 +39,11 @@ import com.carrotgarden.nexus.aws.s3.publish.mailer.CarrotMailer;
 import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.TaskReporter;
+import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotListener;
+import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotListenerSupport;
+import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotScanner;
 import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
-import com.carrotgarden.nexus.aws.s3.publish.util.PathHelp;
 import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 import com.carrotgarden.nexus.aws.s3.publish.util.TaskHelp;
 import com.google.common.base.Throwables;
@@ -74,14 +74,12 @@ public class ScannerTask extends BaseTask {
 	public static String taskNameRule(final String configId,
 			final ConfigType configType) {
 		return NAME + " [" + configId + "] " + configType + " ("
-				+ ConfigHelp.reference().getString("plugin-name") + ")";
+				+ ConfigHelp.pluginName() + ")";
 	}
-
-	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final CapabilityRegistry capaRegistry;
 	private final RepositoryRegistry repoRegistry;
-	private final Scanner scanner;
+	private final CarrotScanner scanner;
 	private final TaskReporter reporter;
 	private final NexusScheduler scheduler;
 	private final CarrotMailer mailer;
@@ -91,7 +89,7 @@ public class ScannerTask extends BaseTask {
 			final CarrotMailer mailer, //
 			final TaskReporter reporter, //
 			final NexusScheduler scheduler, //
-			@Named("serial") final Scanner scanner, //
+			@Named("serial") final CarrotScanner scanner, //
 			final CapabilityRegistry capaRegistry, //
 			final RepositoryRegistry repoRegistry //
 	) {
@@ -236,6 +234,8 @@ public class ScannerTask extends BaseTask {
 
 		final List<String> repoList = RepoHelp.repoList(repoRegistry, comboId);
 
+		final Pattern directoryExclude = scannerDirectoryExclude();
+
 		for (final String repoId : repoList) {
 
 			checkInterruption();
@@ -246,7 +246,7 @@ public class ScannerTask extends BaseTask {
 
 			final File root = RepoHelp.repoRoot(repo);
 
-			final Listener listener = new ListenerSupport() {
+			final CarrotListener listener = new CarrotListenerSupport() {
 
 				@Override
 				public void onBegin() {
@@ -260,10 +260,30 @@ public class ScannerTask extends BaseTask {
 				public void onEnd() {
 
 					log.info("repo stats : processed={} published={}",
-							reporter.fileCount.count(),
+							reporter.scanCount.count(),
 							reporter.amazonPublishedFileCount.count());
 					log.info("repo scan done : {} {}", configId(), repoId);
 					log.info("##########################################");
+				}
+
+				@Override
+				public boolean skipDirectory(final File directory) {
+
+					final String path = //
+					rootFullPath(relativePath(root, directory));
+
+					final boolean isExcluded = directoryExclude.matcher(path)
+							.matches();
+
+					return isExcluded;
+
+				}
+
+				@Override
+				public boolean skipFile(final File file) {
+
+					return false;
+
 				}
 
 				@Override
@@ -272,12 +292,13 @@ public class ScannerTask extends BaseTask {
 
 						checkInterruption();
 
-						reporter.fileCount.inc();
-						reporter.fileRate.mark();
+						reporter.scanCount.inc();
+						reporter.scanRate.mark();
+
 						reporter.repoFilePeek.add(file);
 
 						final String path = //
-						PathHelp.rootFullPath(PathHelp.relativePath(root, file));
+						rootFullPath(relativePath(root, file));
 
 						if (entry.isExcluded(path)) {
 							reporter.amazonIgnoredFileCount.inc();
@@ -299,6 +320,7 @@ public class ScannerTask extends BaseTask {
 							return;
 						}
 
+						reporter.repoFileCount.inc();
 						reporter.repoFileSize.inc(file.length());
 
 						final StorageFileItem item = (StorageFileItem) any;
@@ -310,7 +332,7 @@ public class ScannerTask extends BaseTask {
 								.get(CarrotAttribute.ATTR_IS_SAVED);
 
 						if ("true".equals(value)) {
-							reporter.amazonIgnoredFileCount.inc();
+							reporter.amazonExistingFileCount.inc();
 							return;
 						}
 
@@ -324,7 +346,7 @@ public class ScannerTask extends BaseTask {
 
 							if (isSaved) {
 								reporter.amazonPublishedFileCount.inc();
-								reporter.amazonPublishedFileSize.inc(//
+								reporter.amazonPublishedFileSize.inc( //
 										file.length());
 								break;
 							} else {
@@ -399,14 +421,21 @@ public class ScannerTask extends BaseTask {
 		return getName();
 	}
 
-	public long scannerFailureSleepTime() {
+	public static long scannerFailureSleepTime() {
 		return ConfigHelp.reference().getMilliseconds(
 				"scanner-task.failure-sleep-time");
 	}
 
-	public long scannerRepositorySleepTime() {
+	public static long scannerRepositorySleepTime() {
 		return ConfigHelp.reference().getMilliseconds(
 				"scanner-task.repository-sleep-time");
+	}
+
+	public static Pattern scannerDirectoryExclude() {
+		final String exclude = ConfigHelp.reference().getString(
+				"scanner-task.directory-exclude-pattern");
+		final Pattern pattern = Pattern.compile(exclude);
+		return pattern;
 	}
 
 	public Reporter reporter() {

@@ -9,9 +9,13 @@ package com.carrotgarden.nexus.aws.s3.publish.task;
 
 import javax.inject.Named;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.scheduling.AbstractNexusTask;
 
 public abstract class BaseTask extends AbstractNexusTask<Object> {
+
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	/** nexus task name/type convention */
 	{

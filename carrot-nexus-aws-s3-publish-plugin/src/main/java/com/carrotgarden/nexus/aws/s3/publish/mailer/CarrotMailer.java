@@ -7,6 +7,8 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.mailer;
 
+import static com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp.*;
+
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -18,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.micromailer.Address;
 import org.sonatype.micromailer.MailRequest;
-import org.sonatype.micromailer.MailRequestStatus;
 import org.sonatype.nexus.email.NexusEmailer;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.repository.Repository;
@@ -49,6 +50,20 @@ public class CarrotMailer {
 
 	}
 
+	private static String subject(final Report report, final ConfigEntry entry) {
+
+		return report + " [" + entry.configId() + "] " + pluginName();
+
+	}
+
+	private static String subject(final Report report, final ScannerTask task,
+			final ConfigEntry entry) {
+
+		return report + "/" + task.configType() + " [" + entry.configId()
+				+ "] " + pluginName();
+
+	}
+
 	public void send(final String email, final String subject,
 			final String message) {
 
@@ -62,13 +77,8 @@ public class CarrotMailer {
 
 		request.getToAddresses().add(new Address(email));
 
-		final MailRequestStatus status = nexusEmailer.sendMail(request);
-
-		if (status.isSent()) {
-			return;
-		}
-
-		log.error("failed to send email", status.getErrorCause());
+		/** asynchronous */
+		nexusEmailer.sendMail(request);
 
 	}
 
@@ -88,22 +98,20 @@ public class CarrotMailer {
 			return;
 		}
 
-		final String configId = entry.configId();
-
 		final String subject;
 		final String message;
 
 		switch (report) {
 		case AMAZON_AVAILABLE:
-			subject = report + " [" + configId + "] ";
+			subject = subject(report, entry);
 			message = subject;
 			break;
 		case AMAZON_UNAVAILABLE:
-			subject = report + " [" + configId + "] ";
+			subject = subject(report, entry);
 			message = subject + "\n\n" + manager.failure();
 			break;
 		case AMAZON_HEALTH_REPORT:
-			subject = report + " [" + configId + "] ";
+			subject = subject(report, entry);
 			message = subject + "\n\n" + manager.reporter().report();
 			break;
 		default:
@@ -122,7 +130,6 @@ public class CarrotMailer {
 			return;
 		}
 
-		final String configId = entry.configId();
 		final String repoId = repo.getId();
 		final String itemPath = item.getPath();
 		final Throwable failure = entry.amazonService().failure();
@@ -132,11 +139,11 @@ public class CarrotMailer {
 
 		switch (report) {
 		case DEPLOY_SUCCESS:
-			subject = report + " [" + configId + "] ";
+			subject = subject(report, entry);
 			message = subject + "\n" + repoId + " : " + itemPath;
 			break;
 		case DEPLOY_FAILURE:
-			subject = report + " [" + configId + "] ";
+			subject = subject(report, entry);
 			message = subject + "\n" + repoId + " : " + itemPath + "\n"
 					+ failure;
 			break;
@@ -162,12 +169,12 @@ public class CarrotMailer {
 		switch (report) {
 		case SCANNER_TASK_SUCCESS:
 		case SCANNER_TASK_FAILURE:
-			subject = task.getName() + " " + report;
+			subject = subject(report, task, entry);
 			message = subject + "\n\n" + task.failure();
 			break;
 		case SCANNER_TASK_SUCCESS_REPORT:
 		case SCANNER_TASK_FAILURE_REPORT:
-			subject = task.getName() + " " + report + " report";
+			subject = subject(report, task, entry);
 			message = subject + "\n\n" + task.reporter().report();
 			break;
 		default:

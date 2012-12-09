@@ -90,6 +90,13 @@ public class TestConfigCapability {
 			assertTrue(gav.isSnapshot());
 		}
 
+		{
+			final String path = "/";
+			final Gav gav = calc.pathToGav(path);
+			log(path, gav);
+			assertNull(gav);
+		}
+
 	}
 
 	private void log(final String path, final Gav gav) {

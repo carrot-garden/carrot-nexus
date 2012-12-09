@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigBean;
 import com.carrotgarden.nexus.aws.s3.publish.config.Form;
+import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 
 public class TestReferenceConf {
 
@@ -25,7 +26,35 @@ public class TestReferenceConf {
 			.getLogger(TestReferenceConf.class);
 
 	@Test
-	public void testExclude() throws Exception {
+	public void testGlobalExclude() throws Exception {
+
+		final String exclude = ConfigHelp.reference().getString(
+				"exclude-pattern");
+
+		log.info("exclude : {}", exclude);
+
+		final Pattern pattern = Pattern.compile(exclude);
+
+		assertFalse(pattern.matcher("/").matches());
+
+		assertTrue(pattern.matcher("/.index").matches());
+		assertTrue(pattern.matcher("/.meta").matches());
+		assertTrue(pattern.matcher("/.nexus").matches());
+
+	}
+
+	@Test
+	public void testCase() {
+
+		final Pattern pattern = Pattern
+				.compile("/\\..*|/archetype-catalog.xml|.*-sources\\.jar$|.*-javadoc\\.jar$|.*\\.md5$|.*\\.sha1$|.*\\.asc$");
+
+		assertFalse(pattern.matcher("/").matches());
+
+	}
+
+	@Test
+	public void testDefaultExclude() throws Exception {
 
 		final Map<String, String> props = Form.propsDefault();
 
@@ -35,7 +64,7 @@ public class TestReferenceConf {
 
 		final String exclude = configBean.excludePattern();
 
-		// log.info("exclude : {}", exclude);
+		log.info("exclude : {}", exclude);
 
 		final Pattern pattern = Pattern.compile(configBean.excludePattern());
 

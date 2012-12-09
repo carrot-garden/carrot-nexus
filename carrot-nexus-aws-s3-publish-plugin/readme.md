@@ -12,7 +12,7 @@
 ### info
 
 this is a 
-[nexus]
+[sonatype nexus]
 (http://www.sonatype.org/nexus/)
 plugin that does amazon s3 publishing:
 
@@ -66,7 +66,7 @@ will be re-created again on nexus restart;
 
 this plug-in depends on appropriate **nexus** and **nexus-capabilities-plugin** versions;
 when in doubt, please check ```nexus.version``` and ```nexus-capabilities.version``` in the
-[project descriptor]
+[project properties]
 (https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/pom.xml)
 of the currently downloaded plug-in bundle; 
 

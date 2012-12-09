@@ -28,7 +28,8 @@ public class AmazonReporter extends BaseReporter {
 	public final Counter requestKillCount;
 	public final Counter requestCheckCount;
 	public final Counter requestFailedCount;
-	public final Counter publishedFileSize;
+	public final Counter fileSaveSize;
+	public final Counter fileLoadSize;
 
 	@Inject
 	public AmazonReporter( //
@@ -48,7 +49,8 @@ public class AmazonReporter extends BaseReporter {
 
 		//
 
-		publishedFileSize = newCounter("published file size");
+		fileSaveSize = newCounter("file transmit size");
+		fileLoadSize = newCounter("file received size");
 
 		//
 
@@ -57,7 +59,7 @@ public class AmazonReporter extends BaseReporter {
 			public Double value() {
 				final double perGB = ConfigHelp.reference().getDouble(
 						"amazon-provider.cost.gigabyte-storage");
-				final long size = publishedFileSize.count();
+				final long size = fileSaveSize.count();
 				return perGB * (size / GB);
 			}
 		});

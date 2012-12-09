@@ -7,6 +7,8 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.amazon;
 
+import static com.carrotgarden.nexus.aws.s3.publish.util.PathHelp.*;
+
 import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +39,6 @@ import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.AmazonReporter;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
-import com.carrotgarden.nexus.aws.s3.publish.util.PathHelp;
 import com.google.inject.assistedinject.Assisted;
 import com.yammer.metrics.core.Gauge;
 
@@ -182,7 +183,7 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 			final String bucket = configBean.bucket();
 
 			final DeleteObjectRequest request = //
-			new DeleteObjectRequest(bucket, PathHelp.rootLessPath(path));
+			new DeleteObjectRequest(bucket, rootLessPath(path));
 
 			client.deleteObject(request);
 
@@ -211,9 +212,11 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 			final String bucket = configBean.bucket();
 
 			final GetObjectRequest request = //
-			new GetObjectRequest(bucket, PathHelp.rootLessPath(path));
+			new GetObjectRequest(bucket, rootLessPath(path));
 
 			final ObjectMetadata result = client.getObject(request, file);
+
+			reporter.fileLoadSize.inc(file.length());
 
 			setAvailable(true, null);
 
@@ -272,9 +275,11 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 			final String bucket = configBean.bucket();
 
 			final PutObjectRequest request = //
-			new PutObjectRequest(bucket, PathHelp.rootLessPath(path), file);
+			new PutObjectRequest(bucket, rootLessPath(path), file);
 
 			final PutObjectResult result = client.putObject(request);
+
+			reporter.fileSaveSize.inc(file.length());
 
 			setAvailable(true, null);
 

@@ -25,11 +25,12 @@ import com.yammer.metrics.core.MetricsRegistry;
 @Named("task")
 public class TaskReporter extends StorageReporter {
 
-	public final Counter fileCount;
-	public final Meter fileRate;
+	public final Counter scanCount;
+	public final Meter scanRate;
 	public final Counter repoFileCount;
 	public final Counter repoFileSize;
 	public final Counter taskRunCount;
+	public final Counter amazonExistingFileCount;
 
 	@Inject
 	public TaskReporter( //
@@ -40,8 +41,12 @@ public class TaskReporter extends StorageReporter {
 
 		//
 
-		fileCount = newCounter("processed file count");
-		fileRate = newMeter("processed file rate", "files", TimeUnit.SECONDS);
+		amazonExistingFileCount = newCounter("amazon existing file count");
+
+		//
+
+		scanCount = newCounter("scanner file count");
+		scanRate = newMeter("scanner file rate", "files", TimeUnit.SECONDS);
 
 		//
 
@@ -49,8 +54,8 @@ public class TaskReporter extends StorageReporter {
 
 		//
 
-		repoFileSize = newCounter("repository file size - stored on amazon");
 		repoFileCount = newCounter("repository file count - stored on amazon");
+		repoFileSize = newCounter("repository file size - stored on amazon");
 
 		//
 

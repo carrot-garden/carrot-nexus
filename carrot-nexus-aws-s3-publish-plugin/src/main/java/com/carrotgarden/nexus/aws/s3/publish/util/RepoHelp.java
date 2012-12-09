@@ -24,8 +24,11 @@ import org.sonatype.nexus.proxy.storage.local.LocalRepositoryStorage;
  */
 public class RepoHelp {
 
-	/** internal nexus representation for "All Repositories" group */
-	public static String REPO_ID_ALL = "*";
+	/**
+	 * internal nexus representation for "All Repositories" group
+	 */
+	private static final String[] //
+	REPO_ALL_ID_ARRAY = new String[] { "*", "all", "all_repo" };
 
 	public static URL localURL(final String url) throws Exception {
 
@@ -91,7 +94,12 @@ public class RepoHelp {
 	}
 
 	public static boolean isRepoAll(final String repoId) {
-		return REPO_ID_ALL.equals(repoId);
+		for (final String repoAll : REPO_ALL_ID_ARRAY) {
+			if (repoAll.equals(repoId)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
