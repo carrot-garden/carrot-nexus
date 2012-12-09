@@ -87,11 +87,11 @@ public class CleanerTask extends BaseTask {
 
 			final CarrotListener listener = new CarrotListenerSupport() {
 
-				private final int failureLimit = 10;
-				private int failureCount;
-
-				private int countScanned;
 				private int countCleared;
+				private int countScanned;
+
+				private int failureCount;
+				private final int failureLimit = 10;
 
 				@Override
 				public void onBegin() {
@@ -108,19 +108,6 @@ public class CleanerTask extends BaseTask {
 							countScanned, countCleared);
 					log.info("repo clean done : {}", repoId);
 					log.info("##########################################");
-				}
-
-				@Override
-				public boolean skipDirectory(final File directory) {
-
-					final String path = //
-					rootFullPath(relativePath(root, directory));
-
-					final boolean isExcluded = //
-					directoryExclude.matcher(path).matches();
-
-					return isExcluded;
-
 				}
 
 				@Override
@@ -179,6 +166,19 @@ public class CleanerTask extends BaseTask {
 						}
 
 					}
+
+				}
+
+				@Override
+				public boolean skipDirectory(final File directory) {
+
+					final String path = //
+					rootFullPath(relativePath(root, directory));
+
+					final boolean isExcluded = //
+					directoryExclude.matcher(path).matches();
+
+					return isExcluded;
 
 				}
 

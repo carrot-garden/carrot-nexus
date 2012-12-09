@@ -13,9 +13,10 @@ import org.sonatype.nexus.tasks.descriptors.AbstractScheduledTaskDescriptor;
 public class CleanerDescriptor extends AbstractScheduledTaskDescriptor {
 
 	private final RepoOrGroupComboFormField //
-	olderThanField = new RepoOrGroupComboFormField(CleanerTask.KEY_COMBO_ID, //
+	comboId = new RepoOrGroupComboFormField( //
+			CleanerTask.KEY_COMBO_ID, //
 			"Repository/Group", //
-			"Select repository or group to remove custom attributes from", //
+			"Select repository or group to remove custom attributes from.", //
 			FormField.MANDATORY //
 	);
 
@@ -33,7 +34,7 @@ public class CleanerDescriptor extends AbstractScheduledTaskDescriptor {
 	public List<FormField> formFields() {
 		final List<FormField> fields = new ArrayList<FormField>();
 
-		fields.add(olderThanField);
+		fields.add(comboId);
 
 		return fields;
 
