@@ -25,7 +25,6 @@ import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
 import org.sonatype.nexus.proxy.repository.Repository;
-import org.sonatype.nexus.scheduling.AbstractNexusTask;
 import org.sonatype.nexus.scheduling.NexusScheduler;
 import org.sonatype.scheduling.ScheduledTask;
 import org.sonatype.scheduling.TaskInterruptedException;
@@ -54,7 +53,7 @@ import com.yammer.metrics.core.Gauge;
  * scan repository and publish newly found files to amazon
  */
 @Named(ScannerTask.NAME)
-public class ScannerTask extends AbstractNexusTask<Object> {
+public class ScannerTask extends BaseTask {
 
 	public enum ConfigType {
 
@@ -71,17 +70,6 @@ public class ScannerTask extends AbstractNexusTask<Object> {
 	private static final String KEY_CONFIG_TYPE = "scanner.task.config-type";
 
 	public static final String NAME = "ScannerTask";
-
-	/** nexus task name/type convention */
-	static {
-		final Named anno = ScannerTask.class.getAnnotation(Named.class);
-		if (anno == null) {
-			throw new IllegalStateException("@Named is missing");
-		}
-		if (!anno.value().equals(ScannerTask.class.getSimpleName())) {
-			throw new IllegalStateException("@Named must match class name");
-		}
-	}
 
 	public static String taskNameRule(final String configId,
 			final ConfigType configType) {

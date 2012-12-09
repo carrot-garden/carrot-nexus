@@ -39,14 +39,15 @@ you need to unzip plugin bundle into the plugins folder, and then restart the se
 
 for example, you could use the following
 [install script]
-(https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/install.sh)
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/install.sh)
 
 ### configure
 
 you need to create aws s3 bucket and corresponding user or group credentials;
+
 for example, here is 
 [minimum required user access policy]
-(https://raw.github.com/carrot-garden/carrot-nexus/master/carrot-nexus-aws-s3-publish-plugin/doc/user-policy.json)
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/user-policy.json)
 
 plug-in installs **default configuration** under:
 ```
