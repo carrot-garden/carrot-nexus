@@ -33,8 +33,8 @@ public class AmazonReporter extends BaseReporter {
 	public final Counter fileSaveCount;
 	public final Counter fileLoadSize;
 	public final Counter fileSaveSize;
-	public final PeekQueueGuage fileLoadPeek = new PeekQueueGuage();
-	public final PeekQueueGuage fileSavePeek = new PeekQueueGuage();
+	public final WatchQueueGuage fileLoadWatch = new WatchQueueGuage();
+	public final WatchQueueGuage fileSaveWatch = new WatchQueueGuage();
 
 	@Inject
 	public AmazonReporter( //
@@ -58,8 +58,8 @@ public class AmazonReporter extends BaseReporter {
 		fileLoadCount = newCounter("file received count");
 		fileSaveSize = newCounter("file transmit size");
 		fileLoadSize = newCounter("file received size");
-		newGauge("file received peek", fileLoadPeek);
-		newGauge("file transmit peek", fileSavePeek);
+		newGauge("file received watch", fileLoadWatch);
+		newGauge("file transmit watch", fileSaveWatch);
 
 		//
 

@@ -12,7 +12,7 @@ import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import com.yammer.metrics.core.Gauge;
 
 /** inverse gauge */
-public class PeekQueueGuage extends Gauge<String> implements Clearable {
+public class WatchQueueGuage extends Gauge<String> implements Clearable {
 
 	private final int size;
 	private final CircularFifoBuffer buffer;
@@ -21,11 +21,11 @@ public class PeekQueueGuage extends Gauge<String> implements Clearable {
 		buffer.add(item);
 	}
 
-	public PeekQueueGuage() {
+	public WatchQueueGuage() {
 		this(10);
 	}
 
-	public PeekQueueGuage(final int size) {
+	public WatchQueueGuage(final int size) {
 		this.size = size;
 		this.buffer = new CircularFifoBuffer(size);
 	}

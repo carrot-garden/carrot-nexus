@@ -118,7 +118,8 @@ public class CleanerTask extends BaseTask {
 						countScanned++;
 
 						if (countScanned % reportBatch == 0) {
-							log.info("scanned={}", countScanned);
+							log.info("scanned={} cleared={}", //
+									countScanned, countCleared);
 						}
 
 						final String path = //

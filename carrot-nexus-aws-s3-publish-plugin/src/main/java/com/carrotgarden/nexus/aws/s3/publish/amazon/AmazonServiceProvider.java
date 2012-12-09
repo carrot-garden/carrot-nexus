@@ -220,7 +220,7 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 			reporter.fileLoadCount.inc();
 			reporter.fileLoadSize.inc(file.length());
-			reporter.fileLoadPeek.add(file);
+			reporter.fileLoadWatch.add(file);
 
 			setAvailable(true, null);
 
@@ -283,7 +283,7 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 			reporter.fileSaveCount.inc();
 			reporter.fileSaveSize.inc(file.length());
-			reporter.fileSavePeek.add(file);
+			reporter.fileSaveWatch.add(file);
 
 			setAvailable(true, null);
 

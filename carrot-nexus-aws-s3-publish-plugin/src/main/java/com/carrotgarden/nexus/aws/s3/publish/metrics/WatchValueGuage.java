@@ -10,7 +10,7 @@ package com.carrotgarden.nexus.aws.s3.publish.metrics;
 import com.yammer.metrics.core.Gauge;
 
 /** inverse gauge */
-public class PeekValueGuage<T> extends Gauge<T> implements Clearable {
+public class WatchValueGuage<T> extends Gauge<T> implements Clearable {
 
 	private T value;
 

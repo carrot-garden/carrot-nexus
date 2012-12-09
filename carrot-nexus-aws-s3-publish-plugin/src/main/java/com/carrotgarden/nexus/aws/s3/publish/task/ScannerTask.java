@@ -295,7 +295,7 @@ public class ScannerTask extends BaseTask {
 						reporter.scanCount.inc();
 						reporter.scanRate.mark();
 
-						reporter.repoFilePeek.add(file);
+						reporter.repoFileWatch.add(file);
 
 						final String path = //
 						rootFullPath(relativePath(root, file));
@@ -347,6 +347,7 @@ public class ScannerTask extends BaseTask {
 									service, repo, item, file, log);
 
 							if (isSaved) {
+								reporter.saveFileWatch.add(file);
 								reporter.amazonPublishedFileCount.inc();
 								reporter.amazonPublishedFileSize.inc( //
 										file.length());

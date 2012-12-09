@@ -8,6 +8,7 @@
 package com.carrotgarden.nexus.aws.s3.publish.scanner;
 
 import java.io.File;
+import java.util.Arrays;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -47,6 +48,8 @@ public class CarrotSerialScanner implements CarrotScanner {
 
 		final File[] files = directory.listFiles();
 
+		Arrays.sort(files);
+
 		if (files != null) {
 
 			for (final File file : files) {
@@ -64,7 +67,9 @@ public class CarrotSerialScanner implements CarrotScanner {
 					listener.onFile(file);
 
 				}
+
 			}
+
 		}
 
 		listener.onExitDirectory(directory);

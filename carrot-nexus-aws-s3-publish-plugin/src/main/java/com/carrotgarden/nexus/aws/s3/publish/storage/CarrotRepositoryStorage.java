@@ -122,7 +122,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 			final File file = getFileFromBase(repository, request);
 
-			reporter.repoFilePeek.add(file);
+			reporter.repoFileWatch.add(file);
 
 			/** store local */
 
@@ -153,10 +153,10 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 						reporter.amazonPublishedFileCount.inc();
 						reporter.amazonPublishedFileSize.inc(file.length());
 
+						reporter.saveFileWatch.add(file);
+
 						mailer.sendDeployReport( //
 								Report.DEPLOY_SUCCESS, entry, repository, item);
-
-						reporter.saveFilePeek.add(file);
 
 						continue;
 
