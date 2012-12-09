@@ -114,6 +114,4 @@ your amazon credentials are likely incorrect:
 you can clone this project and build your own plug-in with your changes,
 following steps similar to example
 [build script]
-((https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/build-script.sh)
-)
-;
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/build-script.sh)
