@@ -15,7 +15,7 @@
 NEXUS="/var/lib/nexus/sonatype-work/plugin-repository"
 #
 # current plugin version
-VERSION="2.2.1-build003-SNAPSHOT"
+VERSION="2.2.1-build004-SNAPSHOT"
 #
 REPO="http://oss.sonatype.org/content/repositories/snapshots/"
 GROUP="com.carrotgarden.nexus"

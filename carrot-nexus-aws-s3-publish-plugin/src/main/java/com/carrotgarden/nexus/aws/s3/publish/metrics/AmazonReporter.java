@@ -28,8 +28,13 @@ public class AmazonReporter extends BaseReporter {
 	public final Counter requestKillCount;
 	public final Counter requestCheckCount;
 	public final Counter requestFailedCount;
-	public final Counter fileSaveSize;
+
+	public final Counter fileLoadCount;
+	public final Counter fileSaveCount;
 	public final Counter fileLoadSize;
+	public final Counter fileSaveSize;
+	public final PeekQueueGuage fileLoadPeek = new PeekQueueGuage();
+	public final PeekQueueGuage fileSavePeek = new PeekQueueGuage();
 
 	@Inject
 	public AmazonReporter( //
@@ -49,12 +54,16 @@ public class AmazonReporter extends BaseReporter {
 
 		//
 
+		fileSaveCount = newCounter("file transmit count");
+		fileLoadCount = newCounter("file received count");
 		fileSaveSize = newCounter("file transmit size");
 		fileLoadSize = newCounter("file received size");
+		newGauge("file received peek", fileLoadPeek);
+		newGauge("file transmit peek", fileSavePeek);
 
 		//
 
-		newGauge("estimated amazon monthly storage cost", new Gauge<Double>() {
+		newGauge("file transmit monthly storage cost", new Gauge<Double>() {
 			@Override
 			public Double value() {
 				final double perGB = ConfigHelp.reference().getDouble(

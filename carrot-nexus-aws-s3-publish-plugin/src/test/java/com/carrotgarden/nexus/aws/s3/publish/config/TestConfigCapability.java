@@ -9,8 +9,6 @@ package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import static org.junit.Assert.*;
 
-import java.util.regex.Pattern;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,29 +18,6 @@ import org.sonatype.nexus.proxy.maven.gav.M2GavCalculator;
 public class TestConfigCapability {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-
-	@Test
-	public void testPatternSpecial() {
-
-		final Pattern pattern = Pattern.compile("");
-
-		assertFalse(pattern.matcher("/").matches());
-
-	}
-
-	@Test
-	public void testPatternDefault() {
-
-		final Pattern exclude = ConfigCapability.excludeDefault();
-		final Pattern include = ConfigCapability.includeDefault();
-
-		log.info("exclude {}", exclude);
-		log.info("include {}", include);
-
-		assertNotNull("default exclude pattern", exclude);
-		assertNotNull("default include pattern", include);
-
-	}
 
 	@Test
 	public void testGAV() {

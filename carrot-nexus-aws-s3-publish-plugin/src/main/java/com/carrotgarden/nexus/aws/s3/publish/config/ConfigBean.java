@@ -49,6 +49,10 @@ public class ConfigBean {
 		return asString("bucket");
 	}
 
+	public String prefix() {
+		return asString("prefix");
+	}
+
 	public String comboId() {
 		return asString("combo-id");
 	}

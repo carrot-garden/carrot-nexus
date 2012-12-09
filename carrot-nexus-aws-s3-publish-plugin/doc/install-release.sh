@@ -15,7 +15,7 @@
 NEXUS="/var/lib/nexus/sonatype-work/plugin-repository"
 #
 # current plugin version
-VERSION="2.2.1-build002"
+VERSION="2.2.1-build003"
 #
 REPO="http://repo1.maven.org/maven2"
 GROUP="com/carrotgarden/nexus"

@@ -27,6 +27,7 @@ public class StorageReporter extends BaseReporter {
 	public final Counter amazonFailedFileCount;
 
 	public final PeekQueueGuage repoFilePeek = new PeekQueueGuage();
+	public final PeekQueueGuage saveFilePeek = new PeekQueueGuage();
 
 	@Inject
 	public StorageReporter( //
@@ -44,6 +45,7 @@ public class StorageReporter extends BaseReporter {
 		amazonFailedFileCount = newCounter("amazon failed file count");
 
 		newGauge("processed file peek", repoFilePeek);
+		newGauge("published file peek", saveFilePeek);
 
 	}
 

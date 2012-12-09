@@ -31,29 +31,33 @@ import com.yammer.metrics.core.TimerContext;
  */
 public class AmazonHelp {
 
-	private final static Counter metricsPublishFileCount = Metrics.newCounter(
-			AmazonHelp.class, "global amazon publish file count");
+	private final static Counter metricsPublishFileCount = //
+	Metrics.newCounter(AmazonHelp.class, //
+			"global amazon publish file count");
 
-	private final static Counter metricsAttribFailureCount = Metrics
-			.newCounter(AmazonHelp.class,
-					"global amazon attribute failure count");
+	private final static Counter metricsAttribFailureCount = //
+	Metrics.newCounter(AmazonHelp.class, //
+			"global amazon attribute failure count");
 
-	private final static Counter metricsPublishFailureCount = Metrics
-			.newCounter(AmazonHelp.class, "global amazon publish failure count");
+	private final static Counter metricsPublishFailureCount = //
+	Metrics.newCounter(AmazonHelp.class, //
+			"global amazon publish failure count");
 
-	private final static Counter metricsPublishFileSize = Metrics.newCounter(
-			AmazonHelp.class, "global amazon publish file size");
+	private final static Counter metricsPublishFileSize = //
+	Metrics.newCounter(AmazonHelp.class, //
+			"global amazon publish file size");
 
-	private final static Timer metricsPublishTransferTime = Metrics.newTimer(
-			AmazonHelp.class, "global amazon transer time",
+	private final static Timer metricsPublishTransferTime = //
+	Metrics.newTimer(AmazonHelp.class, //
+			"global amazon transer time", //
 			TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
 
 	static {
 
 		Metrics.newGauge(AmazonHelp.class,
-				"global amazon average transfer speed, bytes/sec",
-				new SizeTimeRatio(metricsPublishFileSize,
-						metricsPublishTransferTime));
+				"global amazon transfer speed, byte/sec", //
+				new SizeTimeRatio(//
+						metricsPublishFileSize, metricsPublishTransferTime));
 
 	}
 
@@ -103,7 +107,13 @@ public class AmazonHelp {
 				metricsAttribFailureCount.inc();
 				metricsPublishFailureCount.inc();
 
-				throw new RuntimeException("attribute persist failure", e);
+				final String message = //
+				"attribute persist failure;" + //
+						" repo=" + repository.getId() + //
+						" path=" + path //
+				;
+
+				throw new RuntimeException(message, e);
 
 			}
 

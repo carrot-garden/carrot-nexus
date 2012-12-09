@@ -32,6 +32,7 @@ import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonFactory;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonManager;
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonService;
 import com.carrotgarden.nexus.aws.s3.publish.condition.ConditionFactory;
+import com.carrotgarden.nexus.aws.s3.publish.mailer.CarrotMailer;
 import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.Reporter;
 import com.carrotgarden.nexus.aws.s3.publish.task.TaskManager;
@@ -56,12 +57,14 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	private final NexusIsActiveCondition nexusCondition;
 	private final AmazonFactory amazonFactory;
 	private final AmazonManager amazonManager;
+	private final CarrotMailer mailer;
 
 	private volatile ConfigBean configBean;
 	private volatile ConfigState configState;
 
 	@Inject
 	public ConfigCapability( //
+			final CarrotMailer mailer, //
 			final AmazonFactory amazonFactory, //
 			@Named("base") final Reporter reporter, //
 			@Named("maven2") final GavCalculator calculator, //
@@ -73,6 +76,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 			final ConditionFactory conditionFactory //
 	) {
 
+		this.mailer = mailer;
 		this.amazonFactory = amazonFactory;
 		this.reporter = reporter;
 		this.calculator = calculator;
@@ -118,43 +122,23 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 	private void includePattern(final ConfigBean configBean) {
 
-		includePattern = includeDefault();
+		includePattern = ConfigHelp.defaultInclude();
 
 	}
 
 	private void excludePattern(final ConfigBean configBean) {
 
 		if (configBean.enableExclude()) {
-			final String defaultPattern = excludeDefault().pattern();
+			final String defaultPattern = ConfigHelp.defaultExclude().pattern();
 			final String customPattern = configBean.excludePattern();
 			final String resultPattern = defaultPattern + "|" + customPattern;
 			excludePattern = excludeCustom(resultPattern);
 		} else {
-			excludePattern = excludeDefault();
+			excludePattern = ConfigHelp.defaultExclude();
 		}
 
 		log.debug("excludePattern : {}", excludePattern);
 
-	}
-
-	protected static Pattern excludeDefault() {
-		try {
-			final String pattern = //
-			ConfigHelp.reference().getString("exclude-pattern");
-			return Pattern.compile(pattern);
-		} catch (final Exception e) {
-			return null;
-		}
-	}
-
-	protected static Pattern includeDefault() {
-		try {
-			final String pattern = //
-			ConfigHelp.reference().getString("include-pattern");
-			return Pattern.compile(pattern);
-		} catch (final Exception e) {
-			return null;
-		}
 	}
 
 	private Pattern excludeCustom(final String pattern) {
@@ -162,44 +146,47 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 			return Pattern.compile(pattern);
 		} catch (final Exception e) {
 			log.error("invalid pattern, using default", e);
-			return excludeDefault();
+			return ConfigHelp.defaultExclude();
 		}
 	}
 
+	private boolean isRelease(final String path) {
+		return !isSnapshot(path);
+	}
+
+	private boolean isSnapshot(final String path) {
+		return path.contains("-SNAPSHOT/");
+	}
+
+	/** FIXME think again */
 	@Override
 	public boolean isExcluded(final String path) {
 
-		/** include */
+		// if (!configBean.publishSnapshots() && isSnapshot(path)) {
+		// return true;
+		// }
 
-		if (includePattern.matcher(path).matches()) {
-			return false;
-		}
+		// if (!configBean.publishReleases() && isRelease(path)) {
+		// return true;
+		// }
 
-		/** exclude */
-
+		/** force exclude */
 		if (excludePattern.matcher(path).matches()) {
 			return true;
 		}
 
-		/** GAV */
+		/** force include */
+		if (includePattern.matcher(path).matches()) {
+			return false;
+		}
 
+		/** permit only valid artifact */
 		final Gav gav = calculator.pathToGav(path);
-
 		if (gav == null) {
 			return true;
-		}
-
-		if (gav.isSnapshot()) {
-			if (configBean.publishSnapshots()) {
-				return false;
-			}
 		} else {
-			if (configBean.publishReleases()) {
-				return false;
-			}
+			return false;
 		}
-
-		return true;
 
 	}
 
@@ -316,9 +303,13 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			taskManager.ensureTasks(configId(), configBean);
 
+			mailer.sendPluginReport(Report.PLUGIN_ENABLED, this);
+
 			break;
 
 		case DISABLED:
+
+			mailer.sendPluginReport(Report.PLUGIN_DISABLED, this);
 
 			taskManager.cancelTasks(configId());
 

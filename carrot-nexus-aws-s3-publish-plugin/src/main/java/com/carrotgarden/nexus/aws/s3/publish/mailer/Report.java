@@ -21,21 +21,19 @@ import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 public enum Report {
 
 	AMAZON_AVAILABLE("amazon-available"), //
-
 	AMAZON_UNAVAILABLE("amazon-unavailable"), //
-
 	AMAZON_HEALTH_REPORT("amazon-health-report"), //
 
 	DEPLOY_SUCCESS("deploy-success"), //
-
 	DEPLOY_FAILURE("deploy-failure"), //
 
-	SCANNER_TASK_SUCCESS("scanner-task-success"), //
+	PLUGIN_ENABLED("plugin-enabled"), //
+	PLUGIN_DISABLED("plugin-disabled"), //
 
+	SCANNER_TASK_SUCCESS("scanner-task-success"), //
 	SCANNER_TASK_FAILURE("scanner-task-failure"), //
 
 	SCANNER_TASK_SUCCESS_REPORT("scanner-task-success-report"), //
-
 	SCANNER_TASK_FAILURE_REPORT("scanner-task-failure-report"), //
 
 	UNKNOWN("unknown"), //

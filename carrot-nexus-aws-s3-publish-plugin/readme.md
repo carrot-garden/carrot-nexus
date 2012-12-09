@@ -81,8 +81,9 @@ when in doubt, please check ```nexus.version``` and ```nexus-capabilities.versio
 (https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/pom.xml)
 of the currently downloaded plug-in bundle; 
 
-plug-in convention is such, that in plug-in version ```2.2.1-build002``` 
-the ```2.2.1``` means the base nexus version the plug-in is built against;  
+plug-in convention is such, that in plug-in version ```2.2.1-build001``` 
+the ```2.2.1``` means the base nexus version the plug-in is built against,
+and ```build001``` is plugin build number;
 
 ### troubleshoot
 

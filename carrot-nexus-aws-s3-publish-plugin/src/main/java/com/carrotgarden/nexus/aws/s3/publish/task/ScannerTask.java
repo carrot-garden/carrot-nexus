@@ -234,7 +234,7 @@ public class ScannerTask extends BaseTask {
 
 		final List<String> repoList = RepoHelp.repoList(repoRegistry, comboId);
 
-		final Pattern directoryExclude = scannerDirectoryExclude();
+		final Pattern defaultExclude = ConfigHelp.defaultExclude();
 
 		for (final String repoId : repoList) {
 
@@ -272,7 +272,7 @@ public class ScannerTask extends BaseTask {
 					final String path = //
 					rootFullPath(relativePath(root, directory));
 
-					final boolean isExcluded = directoryExclude.matcher(path)
+					final boolean isExcluded = defaultExclude.matcher(path)
 							.matches();
 
 					return isExcluded;
@@ -340,6 +340,8 @@ public class ScannerTask extends BaseTask {
 
 						/** block till bucket available */
 						while (true) {
+
+							checkInterruption();
 
 							final boolean isSaved = AmazonHelp.storeItem(
 									service, repo, item, file, log);
@@ -429,13 +431,6 @@ public class ScannerTask extends BaseTask {
 	public static long scannerRepositorySleepTime() {
 		return ConfigHelp.reference().getMilliseconds(
 				"scanner-task.repository-sleep-time");
-	}
-
-	public static Pattern scannerDirectoryExclude() {
-		final String exclude = ConfigHelp.reference().getString(
-				"scanner-task.directory-exclude-pattern");
-		final Pattern pattern = Pattern.compile(exclude);
-		return pattern;
 	}
 
 	public Reporter reporter() {

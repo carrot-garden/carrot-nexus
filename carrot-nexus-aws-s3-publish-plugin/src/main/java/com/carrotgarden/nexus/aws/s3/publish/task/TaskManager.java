@@ -64,7 +64,8 @@ public class TaskManager {
 		if (reference == null) {
 			return;
 		} else {
-			reference.cancel(true);
+			/** do not interrupt */
+			reference.cancel(false);
 		}
 	}
 

@@ -128,10 +128,8 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = configBean.bucket();
-
 			final GetBucketLocationRequest request = //
-			new GetBucketLocationRequest(bucket);
+			new GetBucketLocationRequest(mavenBucket());
 
 			final String result = client.getBucketLocation(request);
 
@@ -172,6 +170,14 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 		return checkCount == 0;
 	}
 
+	private String mavenBucket() {
+		return configBean.bucket();
+	}
+
+	private String mavenRepoKey(final String path) {
+		return configBean.prefix() + rootFullPath(path);
+	}
+
 	@Override
 	public boolean kill(final String path) {
 
@@ -180,10 +186,8 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = configBean.bucket();
-
 			final DeleteObjectRequest request = //
-			new DeleteObjectRequest(bucket, rootLessPath(path));
+			new DeleteObjectRequest(mavenBucket(), mavenRepoKey(path));
 
 			client.deleteObject(request);
 
@@ -209,14 +213,14 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = configBean.bucket();
-
 			final GetObjectRequest request = //
-			new GetObjectRequest(bucket, rootLessPath(path));
+			new GetObjectRequest(mavenBucket(), mavenRepoKey(path));
 
 			final ObjectMetadata result = client.getObject(request, file);
 
+			reporter.fileLoadCount.inc();
 			reporter.fileLoadSize.inc(file.length());
+			reporter.fileLoadPeek.add(file);
 
 			setAvailable(true, null);
 
@@ -272,14 +276,14 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 
 		try {
 
-			final String bucket = configBean.bucket();
-
 			final PutObjectRequest request = //
-			new PutObjectRequest(bucket, rootLessPath(path), file);
+			new PutObjectRequest(mavenBucket(), mavenRepoKey(path), file);
 
 			final PutObjectResult result = client.putObject(request);
 
+			reporter.fileSaveCount.inc();
 			reporter.fileSaveSize.inc(file.length());
+			reporter.fileSavePeek.add(file);
 
 			setAvailable(true, null);
 

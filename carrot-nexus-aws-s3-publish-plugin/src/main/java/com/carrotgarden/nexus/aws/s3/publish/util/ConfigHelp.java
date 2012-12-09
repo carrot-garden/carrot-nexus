@@ -9,6 +9,7 @@ package com.carrotgarden.nexus.aws.s3.publish.util;
 
 import java.io.File;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -50,6 +51,26 @@ public class ConfigHelp {
 
 	public static String pluginName() {
 		return reference().getString("plugin-name");
+	}
+
+	public static Pattern defaultExclude() {
+		try {
+			final String pattern = //
+			ConfigHelp.reference().getString("exclude-pattern");
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			return null;
+		}
+	}
+
+	public static Pattern defaultInclude() {
+		try {
+			final String pattern = //
+			ConfigHelp.reference().getString("include-pattern");
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			return null;
+		}
 	}
 
 }

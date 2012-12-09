@@ -32,6 +32,7 @@ import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotListenerSupport;
 import com.carrotgarden.nexus.aws.s3.publish.scanner.CarrotScanner;
 import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
+import com.google.common.base.Throwables;
 
 /**
  * attribute cleanup task
@@ -69,7 +70,7 @@ public class CleanerTask extends BaseTask {
 	@Override
 	protected Object doRun() throws Exception {
 
-		final Pattern directoryExclude = ScannerTask.scannerDirectoryExclude();
+		final Pattern defaultExclude = ConfigHelp.defaultExclude();
 
 		final List<String> repoList = RepoHelp
 				.repoList(repoRegistry, comboId());
@@ -89,9 +90,7 @@ public class CleanerTask extends BaseTask {
 
 				private int countCleared;
 				private int countScanned;
-
-				private int failureCount;
-				private final int failureLimit = 10;
+				private final int reportBatch = 1000;
 
 				@Override
 				public void onBegin() {
@@ -117,6 +116,10 @@ public class CleanerTask extends BaseTask {
 						checkInterruption();
 
 						countScanned++;
+
+						if (countScanned % reportBatch == 0) {
+							log.info("scanned={}", countScanned);
+						}
 
 						final String path = //
 						rootFullPath(relativePath(root, file));
@@ -156,14 +159,7 @@ public class CleanerTask extends BaseTask {
 
 					} catch (final Exception e) {
 
-						log.error("item clean failure", e);
-
-						failureCount++;
-
-						if (failureCount > failureLimit) {
-							throw new RuntimeException(
-									"too many failures, terminating task");
-						}
+						Throwables.propagate(e);
 
 					}
 
@@ -176,7 +172,7 @@ public class CleanerTask extends BaseTask {
 					rootFullPath(relativePath(root, directory));
 
 					final boolean isExcluded = //
-					directoryExclude.matcher(path).matches();
+					defaultExclude.matcher(path).matches();
 
 					return isExcluded;
 

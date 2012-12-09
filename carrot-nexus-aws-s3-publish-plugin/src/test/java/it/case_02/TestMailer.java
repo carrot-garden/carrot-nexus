@@ -162,15 +162,15 @@ public class TestMailer extends TestAny {
 			log.info("### head : \n{}", GreenMailUtil.getHeaders(message));
 		}
 
-		assertEquals(3, messageList.size());
+		assertEquals(4, messageList.size());
 
 		assertTrue(GreenMailUtil.getHeaders(messageList.get(0)).contains(
-				Report.AMAZON_AVAILABLE.name()));
-
+				Report.PLUGIN_ENABLED.name()));
 		assertTrue(GreenMailUtil.getHeaders(messageList.get(1)).contains(
-				Report.AMAZON_HEALTH_REPORT.name()));
-
+				Report.AMAZON_AVAILABLE.name()));
 		assertTrue(GreenMailUtil.getHeaders(messageList.get(2)).contains(
+				Report.AMAZON_HEALTH_REPORT.name()));
+		assertTrue(GreenMailUtil.getHeaders(messageList.get(3)).contains(
 				Report.DEPLOY_SUCCESS.name()));
 
 		assertTrue("amazon delete", amazonService().kill(path));

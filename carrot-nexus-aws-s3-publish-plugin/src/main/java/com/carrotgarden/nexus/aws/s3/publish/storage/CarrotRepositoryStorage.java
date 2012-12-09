@@ -8,6 +8,7 @@
 package com.carrotgarden.nexus.aws.s3.publish.storage;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,6 +38,7 @@ import com.carrotgarden.nexus.aws.s3.publish.mailer.CarrotMailer;
 import com.carrotgarden.nexus.aws.s3.publish.mailer.Report;
 import com.carrotgarden.nexus.aws.s3.publish.metrics.StorageReporter;
 import com.carrotgarden.nexus.aws.s3.publish.util.AmazonHelp;
+import com.carrotgarden.nexus.aws.s3.publish.util.ConfigHelp;
 import com.yammer.metrics.Metrics;
 
 /**
@@ -61,6 +63,8 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 	private final StorageReporter reporter;
 	private final CarrotMailer mailer;
 
+	private final Pattern defaultExclude;
+
 	@Inject
 	public CarrotRepositoryStorage( //
 			final CarrotMailer mailer, //
@@ -80,6 +84,8 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 		/** use global for now */
 		this.reporter = new StorageReporter(Metrics.defaultRegistry());
 
+		defaultExclude = ConfigHelp.defaultExclude();
+
 	}
 
 	@Override
@@ -87,37 +93,42 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 		return NAME;
 	}
 
+	private boolean isExcluded(final String path) {
+		return defaultExclude.matcher(path).matches();
+	}
+
+	/**
+	 * this receives requests for both artifacts and meta data
+	 */
 	@Override
-	public void storeItem(final Repository repo, final StorageItem any)
+	public void storeItem(final Repository repository, final StorageItem any)
 			throws UnsupportedStorageOperationException, LocalStorageException {
-
-		final boolean isFileItem = any instanceof StorageFileItem;
-
-		if (!isFileItem) {
-			reporter.amazonIgnoredFileCount.inc();
-			super.storeItem(repo, any);
-			return;
-		}
 
 		try {
 
-			final String repoId = repo.getId();
+			final boolean isFileItem = any instanceof StorageFileItem;
 
+			if (!isFileItem || isExcluded(any.getPath())) {
+				reporter.amazonIgnoredFileCount.inc();
+				super.storeItem(repository, any);
+				return;
+			}
+
+			final String repoId = repository.getId();
 			final StorageFileItem item = (StorageFileItem) any;
+			final String path = item.getPath();
 
 			final ResourceStoreRequest request = item.getResourceStoreRequest();
 
-			final File file = getFileFromBase(repo, request);
+			final File file = getFileFromBase(repository, request);
 
 			reporter.repoFilePeek.add(file);
 
 			/** store local */
 
-			super.storeItem(repo, item);
+			super.storeItem(repository, item);
 
 			/** store all remote */
-
-			final String path = item.getPath();
 
 			final ConfigEntryList entryList = resolver.entryList(repoId);
 
@@ -135,7 +146,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 					final AmazonService service = entry.amazonService();
 
 					isSaved &= AmazonHelp.storeItem( //
-							service, repo, item, file, log);
+							service, repository, item, file, log);
 
 					if (isSaved) {
 
@@ -143,14 +154,16 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 						reporter.amazonPublishedFileSize.inc(file.length());
 
 						mailer.sendDeployReport( //
-								Report.DEPLOY_SUCCESS, entry, repo, item);
+								Report.DEPLOY_SUCCESS, entry, repository, item);
+
+						reporter.saveFilePeek.add(file);
 
 						continue;
 
 					} else {
 
 						mailer.sendDeployReport( //
-								Report.DEPLOY_FAILURE, entry, repo, item);
+								Report.DEPLOY_FAILURE, entry, repository, item);
 
 						break;
 
@@ -170,9 +183,15 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 			}
 
 			/** revert local */
-			super.shredItem(repo, request);
+			super.shredItem(repository, request);
 
-			throw new LocalStorageException("amazon provider failure");
+			final String message = //
+			"amazon persist failure;" + //
+					" repo=" + repository.getId() + //
+					" path=" + path //
+			;
+
+			throw new LocalStorageException(message);
 
 		} catch (final Exception e) {
 

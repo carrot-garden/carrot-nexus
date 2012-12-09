@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
+import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Metric;
 import com.yammer.metrics.core.MetricName;
 import com.yammer.metrics.core.MetricPredicate;
@@ -51,8 +52,8 @@ public class CarrotConsoleReporter extends ConsoleReporter {
 					out.print("  ");
 					out.print(subEntry.getKey().getName());
 					out.println(':');
-					subEntry.getValue().processWith(this, subEntry.getKey(),
-							out);
+					subEntry.getValue().processWith( //
+							this, subEntry.getKey(), out);
 				}
 			}
 			out.println();
@@ -60,6 +61,12 @@ public class CarrotConsoleReporter extends ConsoleReporter {
 		} catch (final Exception e) {
 			e.printStackTrace(out);
 		}
+	}
+
+	@Override
+	public void processCounter(final MetricName name, final Counter counter,
+			final PrintStream stream) {
+		stream.printf("    count = %,d\n", counter.count());
 	}
 
 }

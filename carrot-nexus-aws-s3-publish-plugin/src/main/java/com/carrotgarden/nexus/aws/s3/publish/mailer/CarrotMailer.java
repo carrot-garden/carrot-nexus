@@ -25,6 +25,7 @@ import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.repository.Repository;
 
 import com.carrotgarden.nexus.aws.s3.publish.amazon.AmazonManager;
+import com.carrotgarden.nexus.aws.s3.publish.config.ConfigCapability;
 import com.carrotgarden.nexus.aws.s3.publish.config.ConfigEntry;
 import com.carrotgarden.nexus.aws.s3.publish.task.ScannerTask;
 
@@ -181,6 +182,16 @@ public class CarrotMailer {
 			log.error("wrong report : {}", report);
 			return;
 		}
+
+		send(entry.reportEmailList(), subject, message);
+
+	}
+
+	public void sendPluginReport(final Report report,
+			final ConfigCapability entry) {
+
+		final String subject = subject(report, entry);
+		final String message = subject;
 
 		send(entry.reportEmailList(), subject, message);
 

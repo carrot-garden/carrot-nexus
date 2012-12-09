@@ -195,11 +195,12 @@ public class Form {
 	}
 
 	/**
-	 * make properties from custom reference.conf file
+	 * make properties from custom reference.conf file with fallback on defaults
 	 */
 	public static Map<String, String> propsFrom(final File file) {
 
-		final Config root = ConfigFactory.parseFile(file).resolve();
+		final Config root = ConfigFactory.parseFile(file)
+				.withFallback(ConfigHelp.reference()).resolve();
 
 		return propsFrom(root);
 

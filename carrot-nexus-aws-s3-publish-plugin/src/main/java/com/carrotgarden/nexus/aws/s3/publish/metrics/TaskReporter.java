@@ -54,20 +54,21 @@ public class TaskReporter extends StorageReporter {
 
 		//
 
-		repoFileCount = newCounter("repository file count - stored on amazon");
-		repoFileSize = newCounter("repository file size - stored on amazon");
+		repoFileCount = newCounter("repository file count (stored on amazon)");
+		repoFileSize = newCounter("repository file size (stored on amazon)");
 
 		//
 
-		newGauge("estimated amazon monthly storage cost", new Gauge<Double>() {
-			@Override
-			public Double value() {
-				final double perGB = ConfigHelp.reference().getDouble(
-						"amazon-provider.cost.gigabyte-storage");
-				final long size = repoFileSize.count();
-				return perGB * (size / GB);
-			}
-		});
+		newGauge("repository storage cost (stored on amazon, $/month)",
+				new Gauge<Double>() {
+					@Override
+					public Double value() {
+						final double perGB = ConfigHelp.reference().getDouble(
+								"amazon-provider.cost.gigabyte-storage");
+						final long size = repoFileSize.count();
+						return perGB * (size / GB);
+					}
+				});
 
 	}
 
