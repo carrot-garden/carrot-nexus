@@ -9,6 +9,8 @@ package com.carrotgarden.nexus.aws.s3.publish.config;
 
 import static org.junit.Assert.*;
 
+import java.util.regex.Pattern;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +22,25 @@ public class TestConfigCapability {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Test
+	public void testPatternSpecial() {
+
+		final Pattern pattern = Pattern.compile("");
+
+		assertFalse(pattern.matcher("/").matches());
+
+	}
+
+	@Test
 	public void testPatternDefault() {
 
-		assertNotNull("default exclude pattern",
-				ConfigCapability.excludeDefault());
+		final Pattern exclude = ConfigCapability.excludeDefault();
+		final Pattern include = ConfigCapability.includeDefault();
+
+		log.info("exclude {}", exclude);
+		log.info("include {}", include);
+
+		assertNotNull("default exclude pattern", exclude);
+		assertNotNull("default include pattern", include);
 
 	}
 
@@ -92,6 +109,13 @@ public class TestConfigCapability {
 
 		{
 			final String path = "/";
+			final Gav gav = calc.pathToGav(path);
+			log(path, gav);
+			assertNull(gav);
+		}
+
+		{
+			final String path = "com/carrotgarden/nexus/carrot-nexus-aws-s3-publish-plugin/2.2.1-build003-SNAPSHOT/maven-metadata.xml";
 			final Gav gav = calc.pathToGav(path);
 			log(path, gav);
 			assertNull(gav);

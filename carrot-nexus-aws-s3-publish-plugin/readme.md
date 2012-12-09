@@ -38,8 +38,19 @@ and you are looking for the ```bundle.zip``` artifact;
 you need to unzip plugin bundle into the plugins folder, and then restart the service;
 
 for example, you could use the following
-[install script]
-(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/install.sh)
+[install-release.sh]
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/install-release.sh)
+or
+[install-snapshot.sh]
+(https://github.com/carrot-garden/carrot-nexus/blob/master/carrot-nexus-aws-s3-publish-plugin/doc/install-snapshot.sh)
+install scripts;
+
+or you could download manually latest 
+[release]
+(https://oss.sonatype.org/content/repositories/releases/com/carrotgarden/nexus/carrot-nexus-aws-s3-publish-plugin/)
+or
+[snapshot]
+(https://oss.sonatype.org/content/repositories/snapshots/com/carrotgarden/nexus/carrot-nexus-aws-s3-publish-plugin/)
 
 ### configure
 

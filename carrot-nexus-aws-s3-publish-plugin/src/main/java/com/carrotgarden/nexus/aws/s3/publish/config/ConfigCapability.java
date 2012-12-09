@@ -113,7 +113,14 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 		return configBean.comboId();
 	}
 
+	private Pattern includePattern;
 	private Pattern excludePattern;
+
+	private void includePattern(final ConfigBean configBean) {
+
+		includePattern = includeDefault();
+
+	}
 
 	private void excludePattern(final ConfigBean configBean) {
 
@@ -140,6 +147,16 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 		}
 	}
 
+	protected static Pattern includeDefault() {
+		try {
+			final String pattern = //
+			ConfigHelp.reference().getString("include-pattern");
+			return Pattern.compile(pattern);
+		} catch (final Exception e) {
+			return null;
+		}
+	}
+
 	private Pattern excludeCustom(final String pattern) {
 		try {
 			return Pattern.compile(pattern);
@@ -152,7 +169,13 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 	@Override
 	public boolean isExcluded(final String path) {
 
-		/** pattern */
+		/** include */
+
+		if (includePattern.matcher(path).matches()) {
+			return false;
+		}
+
+		/** exclude */
 
 		if (excludePattern.matcher(path).matches()) {
 			return true;
@@ -277,6 +300,7 @@ public class ConfigCapability extends CapabilitySupport implements Capability,
 
 			configBean = new ConfigBean(context().properties());
 
+			includePattern(configBean);
 			excludePattern(configBean);
 
 			reportEmailList(configBean.emailAddress());
