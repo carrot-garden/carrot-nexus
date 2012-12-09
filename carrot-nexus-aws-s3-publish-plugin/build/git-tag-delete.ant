@@ -11,7 +11,7 @@
 
 	<echo message="basedir : ${basedir}" />
 
-	<property name="tag" value="carrot-maven-scr-plugin-1.1.0" />
+	<property name="tag" value="carrot-nexus-aws-s3-publish-plugin-2.2.1-build004" />
 
 	<target name="git">
 		<exec executable="git">

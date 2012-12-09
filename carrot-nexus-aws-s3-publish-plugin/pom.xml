@@ -21,7 +21,7 @@
 
 	<groupId>com.carrotgarden.nexus</groupId>
 	<artifactId>carrot-nexus-aws-s3-publish-plugin</artifactId>
-	<version>2.2.1-build005-SNAPSHOT</version>
+	<version>2.2.1-build003-SNAPSHOT</version>
 	<packaging>nexus-plugin</packaging>
 
 	<scm>
