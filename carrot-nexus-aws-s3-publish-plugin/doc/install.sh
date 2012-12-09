@@ -1,5 +1,13 @@
 #!/bin/bash
 #
+# Copyright (C) 2010-2012 Andrei Pozolotin <Andrei.Pozolotin@gmail.com>
+#
+# All rights reserved. Licensed under the OSI BSD License.
+#
+# http://www.opensource.org/licenses/bsd-license.php
+#
+
+#
 # unzip plugin bundle into the plugins folder, and then restart the service:
 #
 #
