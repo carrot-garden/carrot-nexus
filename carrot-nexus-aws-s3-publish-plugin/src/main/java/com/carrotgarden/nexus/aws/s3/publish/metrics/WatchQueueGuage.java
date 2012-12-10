@@ -22,7 +22,7 @@ public class WatchQueueGuage extends Gauge<String> implements Clearable {
 	}
 
 	public WatchQueueGuage() {
-		this(10);
+		this(20);
 	}
 
 	public WatchQueueGuage(final int size) {

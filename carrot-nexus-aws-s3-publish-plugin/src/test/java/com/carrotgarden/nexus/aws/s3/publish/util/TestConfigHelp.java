@@ -20,12 +20,15 @@ public class TestConfigHelp {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Test
-	public void testPatternSpecial() {
-
+	public void testPatternSpecial01() {
 		final Pattern pattern = Pattern.compile("");
-
 		assertFalse(pattern.matcher("/").matches());
+	}
 
+	@Test
+	public void testPatternSpecial02() {
+		final Pattern pattern = Pattern.compile("");
+		assertFalse(pattern.matcher("/").matches());
 	}
 
 	@Test
@@ -39,6 +42,11 @@ public class TestConfigHelp {
 
 		assertNotNull("default exclude pattern", exclude);
 		assertNotNull("default include pattern", include);
+
+		assertFalse(include.matcher("maven-metadata.xml").matches());
+		assertTrue(include.matcher("/maven-metadata.xml").matches());
+		assertTrue(include.matcher("/com/espertech/esper/maven-metadata.xml")
+				.matches());
 
 	}
 

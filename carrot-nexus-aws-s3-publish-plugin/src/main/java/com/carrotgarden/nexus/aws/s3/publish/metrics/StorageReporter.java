@@ -27,6 +27,7 @@ public class StorageReporter extends BaseReporter {
 	public final Counter amazonFailedFileCount;
 
 	public final WatchQueueGuage repoFileWatch = new WatchQueueGuage();
+	public final WatchQueueGuage skipFileWatch = new WatchQueueGuage();
 	public final WatchQueueGuage saveFileWatch = new WatchQueueGuage();
 
 	@Inject
@@ -44,8 +45,9 @@ public class StorageReporter extends BaseReporter {
 		amazonRetriedFileCount = newCounter("amazon retried file count");
 		amazonFailedFileCount = newCounter("amazon failed file count");
 
-		newGauge("processed file watch", repoFileWatch);
-		newGauge("published file watch", saveFileWatch);
+		newGauge("file watch: discovered", repoFileWatch);
+		newGauge("file watch: published", saveFileWatch);
+		newGauge("file watch: ignored", skipFileWatch);
 
 	}
 

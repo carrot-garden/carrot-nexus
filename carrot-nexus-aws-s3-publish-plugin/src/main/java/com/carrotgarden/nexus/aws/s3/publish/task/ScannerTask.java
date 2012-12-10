@@ -272,10 +272,16 @@ public class ScannerTask extends BaseTask {
 					final String path = //
 					rootFullPath(relativePath(root, directory));
 
-					final boolean isExcluded = defaultExclude.matcher(path)
-							.matches();
+					final boolean isDefaultExclude = //
+					defaultExclude.matcher(path).matches();
 
-					return isExcluded;
+					if (isDefaultExclude) {
+						log.info("ignore direcotry : {}", directory);
+						reporter.skipFileWatch.add(directory
+								+ "[default exclude]");
+					}
+
+					return isDefaultExclude;
 
 				}
 
@@ -294,7 +300,6 @@ public class ScannerTask extends BaseTask {
 
 						reporter.scanCount.inc();
 						reporter.scanRate.mark();
-
 						reporter.repoFileWatch.add(file);
 
 						final String path = //
@@ -302,6 +307,8 @@ public class ScannerTask extends BaseTask {
 
 						if (entry.isExcluded(path)) {
 							reporter.amazonIgnoredFileCount.inc();
+							reporter.skipFileWatch.add(file
+									+ "[entry is excluded]");
 							return;
 						}
 
@@ -313,10 +320,12 @@ public class ScannerTask extends BaseTask {
 
 						final StorageItem any = repo.retrieveItem(request);
 
-						final boolean isFile = any instanceof StorageFileItem;
+						final boolean isFileItem = any instanceof StorageFileItem;
 
-						if (!isFile) {
+						if (!isFileItem) {
 							reporter.amazonIgnoredFileCount.inc();
+							reporter.skipFileWatch.add(file
+									+ "[not a file item]");
 							return;
 						}
 
@@ -333,20 +342,23 @@ public class ScannerTask extends BaseTask {
 
 						if ("true".equals(value)) {
 							reporter.amazonExistingFileCount.inc();
+							reporter.skipFileWatch.add(file
+									+ "[already stored]");
 							return;
 						}
 
 						int countSleep = 0;
 
 						/** block till bucket available */
+
 						while (true) {
 
 							checkInterruption();
 
-							final boolean isSaved = AmazonHelp.storeItem(
+							final boolean isAmazonSaved = AmazonHelp.storeItem(
 									service, repo, item, file, log);
 
-							if (isSaved) {
+							if (isAmazonSaved) {
 								reporter.saveFileWatch.add(file);
 								reporter.amazonPublishedFileCount.inc();
 								reporter.amazonPublishedFileSize.inc( //
@@ -354,10 +366,14 @@ public class ScannerTask extends BaseTask {
 								break;
 							} else {
 								reporter.amazonRetriedFileCount.inc();
+								reporter.skipFileWatch.add(file
+										+ "[amazon failure]");
 							}
 
 							if (countSleep == 0) {
-								log.warn("amazon failure;  will wait and try again");
+								log.warn(
+										"amazon failure - will wait and try again : {}",
+										file);
 							}
 
 							doSleep(scannerFailureSleepTime());

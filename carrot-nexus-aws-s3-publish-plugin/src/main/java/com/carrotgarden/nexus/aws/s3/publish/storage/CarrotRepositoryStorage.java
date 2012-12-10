@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.mime.MimeSupport;
 import org.sonatype.nexus.proxy.LocalStorageException;
-import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.item.LinkPersister;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
@@ -93,7 +92,7 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 		return NAME;
 	}
 
-	private boolean isExcluded(final String path) {
+	private boolean isDefaultExclude(final String path) {
 		return defaultExclude.matcher(path).matches();
 	}
 
@@ -106,23 +105,30 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 		try {
 
+			final File file = getFileFromBase(repository,
+					any.getResourceStoreRequest());
+
+			reporter.repoFileWatch.add(file);
+
 			final boolean isFileItem = any instanceof StorageFileItem;
 
-			if (!isFileItem || isExcluded(any.getPath())) {
-				reporter.amazonIgnoredFileCount.inc();
+			if (!isFileItem) {
 				super.storeItem(repository, any);
+				reporter.amazonIgnoredFileCount.inc();
+				reporter.skipFileWatch.add(file + "[not a file item]");
+				return;
+			}
+
+			if (isDefaultExclude(any.getPath())) {
+				super.storeItem(repository, any);
+				reporter.amazonIgnoredFileCount.inc();
+				reporter.skipFileWatch.add(file + "[default exclude]");
 				return;
 			}
 
 			final String repoId = repository.getId();
 			final StorageFileItem item = (StorageFileItem) any;
 			final String path = item.getPath();
-
-			final ResourceStoreRequest request = item.getResourceStoreRequest();
-
-			final File file = getFileFromBase(repository, request);
-
-			reporter.repoFileWatch.add(file);
 
 			/** store local */
 
@@ -132,58 +138,65 @@ public class CarrotRepositoryStorage extends DefaultFSLocalRepositoryStorage
 
 			final ConfigEntryList entryList = resolver.entryList(repoId);
 
-			boolean isSaved = true;
+			if (entryList.isEmpty()) {
+				reporter.amazonIgnoredFileCount.inc();
+				reporter.skipFileWatch.add(file + "[no plugin entries]");
+				return;
+			}
+
+			boolean isAmazonSaved = true;
 
 			for (final ConfigEntry entry : entryList) {
 
-				if (entry.isConfigState(ConfigState.ENABLED)) {
+				if (!entry.isConfigState(ConfigState.ENABLED)) {
+					reporter.amazonIgnoredFileCount.inc();
+					reporter.skipFileWatch.add(file + "[entry is disabled]");
+					continue;
+				}
 
-					if (entry.isExcluded(path)) {
-						reporter.amazonIgnoredFileCount.inc();
-						continue;
-					}
+				if (entry.isExcluded(path)) {
+					reporter.amazonIgnoredFileCount.inc();
+					reporter.skipFileWatch.add(file + "[entry is excluded]");
+					continue;
+				}
 
-					final AmazonService service = entry.amazonService();
+				final AmazonService service = entry.amazonService();
 
-					isSaved &= AmazonHelp.storeItem( //
-							service, repository, item, file, log);
+				isAmazonSaved &= AmazonHelp.storeItem( //
+						service, repository, item, file, log);
 
-					if (isSaved) {
+				if (isAmazonSaved) {
 
-						reporter.amazonPublishedFileCount.inc();
-						reporter.amazonPublishedFileSize.inc(file.length());
+					reporter.amazonPublishedFileCount.inc();
+					reporter.amazonPublishedFileSize.inc(file.length());
 
-						reporter.saveFileWatch.add(file);
+					reporter.saveFileWatch.add(file);
 
-						mailer.sendDeployReport( //
-								Report.DEPLOY_SUCCESS, entry, repository, item);
+					mailer.sendDeployReport( //
+							Report.DEPLOY_SUCCESS, entry, repository, item);
 
-						continue;
-
-					} else {
-
-						mailer.sendDeployReport( //
-								Report.DEPLOY_FAILURE, entry, repository, item);
-
-						break;
-
-					}
+					continue;
 
 				} else {
 
-					/** no stats for disabled */
-					continue;
+					reporter.skipFileWatch.add(file + "[amazon failure]");
+
+					mailer.sendDeployReport( //
+							Report.DEPLOY_FAILURE, entry, repository, item);
+
+					break;
 
 				}
 
 			}
 
-			if (isSaved) {
+			if (isAmazonSaved) {
 				return;
 			}
 
 			/** revert local */
-			super.shredItem(repository, request);
+
+			super.shredItem(repository, item.getResourceStoreRequest());
 
 			final String message = //
 			"amazon persist failure;" + //

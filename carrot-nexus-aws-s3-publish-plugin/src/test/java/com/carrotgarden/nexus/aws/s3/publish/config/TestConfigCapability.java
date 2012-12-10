@@ -90,10 +90,10 @@ public class TestConfigCapability {
 		}
 
 		{
-			final String path = "com/carrotgarden/nexus/carrot-nexus-aws-s3-publish-plugin/2.2.1-build003-SNAPSHOT/maven-metadata.xml";
+			final String path = "jboss-releases-thirdparty/esper/esper/2.2.0-JBoss-Nightly/esper-2.2.0-JBoss-Nightly.jar";
 			final Gav gav = calc.pathToGav(path);
 			log(path, gav);
-			assertNull(gav);
+			assertNotNull(gav);
 		}
 
 	}
