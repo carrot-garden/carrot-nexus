@@ -7,7 +7,6 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
-import java.util.Collection;
 import java.util.Map;
 
 import javax.inject.Named;
@@ -15,13 +14,12 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.nexus.plugins.capabilities.CapabilityReference;
 import org.sonatype.nexus.plugins.capabilities.CapabilityRegistry;
 import org.sonatype.nexus.plugins.capabilities.CapabilityRegistryEvent;
 import org.sonatype.nexus.plugins.capabilities.CapabilityType;
-import org.sonatype.nexus.plugins.capabilities.support.CapabilityReferenceFilterBuilder;
 import org.sonatype.sisu.goodies.eventbus.EventBus;
 
+import com.carrotgarden.nexus.aws.s3.publish.util.CapaHelp;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -42,7 +40,7 @@ public class ConfigBoot implements EventBus.LoadOnStart {
 
 			final CapabilityType type = ConfigDescriptor.TYPE;
 
-			if (hasNoReference(registry, type)) {
+			if (CapaHelp.hasNoReference(registry, type)) {
 
 				log.info("provide default capability type={}", type);
 
@@ -59,33 +57,6 @@ public class ConfigBoot implements EventBus.LoadOnStart {
 
 		} catch (final Exception e) {
 			throw new RuntimeException("default capability failure", e);
-		}
-
-	}
-
-	public static boolean hasNoReference(final CapabilityRegistry registry,
-			final CapabilityType type) {
-
-		final CapabilityReference reference = referenceFrom(registry, type);
-
-		return reference == null;
-
-	}
-
-	public static CapabilityReference referenceFrom(
-			final CapabilityRegistry registry, final CapabilityType type) {
-
-		final CapabilityReferenceFilterBuilder.CapabilityReferenceFilter filter = //
-		CapabilityReferenceFilterBuilder.capabilities().withType(type);
-
-		@SuppressWarnings("unchecked")
-		final Collection<CapabilityReference> capabilities = //
-		(Collection<CapabilityReference>) registry.get(filter);
-
-		if (capabilities == null || capabilities.isEmpty()) {
-			return null;
-		} else {
-			return capabilities.iterator().next();
 		}
 
 	}

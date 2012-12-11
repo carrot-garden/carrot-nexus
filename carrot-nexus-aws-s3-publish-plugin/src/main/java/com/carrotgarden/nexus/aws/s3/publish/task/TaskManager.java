@@ -173,7 +173,7 @@ public class TaskManager {
 			return;
 		}
 
-		final String title = "task : " + configType;
+		final String title = "task config type : " + configType;
 
 		task.reporter().report(text, title);
 

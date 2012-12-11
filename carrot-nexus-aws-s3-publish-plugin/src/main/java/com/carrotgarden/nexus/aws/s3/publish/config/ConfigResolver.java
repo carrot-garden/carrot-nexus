@@ -7,6 +7,7 @@
  */
 package com.carrotgarden.nexus.aws.s3.publish.config;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -15,14 +16,19 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.nexus.plugins.capabilities.CapabilityReference;
+import org.sonatype.nexus.plugins.capabilities.CapabilityRegistry;
+import org.sonatype.nexus.proxy.events.RepositoryGroupMembersChangedEvent;
 import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
 import org.sonatype.sisu.goodies.eventbus.EventBus;
 
+import com.carrotgarden.nexus.aws.s3.publish.util.CapaHelp;
 import com.carrotgarden.nexus.aws.s3.publish.util.RepoHelp;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * provides exploded capability list per repository
+ * provides exploded capability list per repository, resolved from repository
+ * group membership
  */
 @Named
 @Singleton
@@ -34,13 +40,16 @@ public class ConfigResolver {
 
 	private final RepositoryRegistry registry;
 	private final EventBus eventBus;
+	private final CapabilityRegistry capaRegistry;
 
 	@Inject
 	public ConfigResolver( //
+			final CapabilityRegistry capaRegistry, //
 			final RepositoryRegistry registry, //
 			final EventBus eventBus //
 	) {
 
+		this.capaRegistry = capaRegistry;
 		this.registry = registry;
 		this.eventBus = eventBus;
 
@@ -48,9 +57,83 @@ public class ConfigResolver {
 
 	}
 
-	/** involve entry into repository */
+	/**
+	 * involve entry into repository
+	 */
 	@Subscribe
-	public void handle(final ConfigEntry configEntry) {
+	public synchronized void handle(final ConfigEntry configEntry) {
+
+		log.info("\n\t ### involve {} {}", //
+				configEntry.configId(), configEntry.configState());
+
+		switch (configEntry.configState()) {
+		case ADDED:
+			entryAdd(configEntry);
+			break;
+		case REMOVED:
+			entryRemove(configEntry);
+			break;
+		default:
+			return;
+		}
+
+	}
+
+	/**
+	 * change entry involvement with repository
+	 */
+	@Subscribe
+	public synchronized void handle(
+			final RepositoryGroupMembersChangedEvent event) {
+
+		final String groupId = event.getGroupRepository().getId();
+
+		log.info("\n\t ### change groupId : {}", groupId);
+
+		final List<String> repoAdded = event.getAddedRepositoryIds();
+		final List<String> repoRemoved = event.getRemovedRepositoryIds();
+
+		final List<ConfigEntry> entryList = entryListForGroup(groupId);
+
+		for (final ConfigEntry entry : entryList) {
+
+			final String configId = entry.configId();
+
+			for (final String repoId : repoAdded) {
+				entryMap(repoId).put(configId, entry);
+			}
+
+			for (final String repoId : repoRemoved) {
+				entryMap(repoId).remove(configId);
+			}
+
+		}
+
+	}
+
+	private List<ConfigEntry> entryListForGroup(final String groupId) {
+
+		final List<ConfigEntry> entryList = new ArrayList<ConfigEntry>();
+
+		final List<CapabilityReference> referenceList = CapaHelp.referenceList(
+				capaRegistry, ConfigDescriptor.TYPE);
+
+		for (final CapabilityReference reference : referenceList) {
+
+			final ConfigEntry entry = reference
+					.capabilityAs(ConfigCapability.class);
+
+			if (entry.comboId().equals(groupId)) {
+				entryList.add(entry);
+			}
+
+		}
+
+		return entryList;
+
+	}
+
+	private void entryAdd(final ConfigEntry configEntry) {
 
 		/** individual or group or virtual id */
 		final String comboId = configEntry.comboId();
@@ -67,7 +150,17 @@ public class ConfigResolver {
 
 	}
 
-	public ConfigEntryMap entryMap(final String repoId) {
+	private void entryRemove(final ConfigEntry configEntry) {
+
+		for (final ConfigEntryMap entryMap : entryStore.values()) {
+
+			entryMap.remove(configEntry.configId());
+
+		}
+
+	}
+
+	private ConfigEntryMap entryMap(final String repoId) {
 
 		ConfigEntryMap map = entryStore.get(repoId);
 
