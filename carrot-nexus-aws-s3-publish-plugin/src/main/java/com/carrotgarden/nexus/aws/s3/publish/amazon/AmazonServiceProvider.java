@@ -24,6 +24,8 @@ import org.sonatype.nexus.threads.NexusThreadFactory;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
@@ -151,15 +153,22 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 	public synchronized void configure(final ConfigBean config) {
 		this.configBean = config;
 	}
-
-	private AWSCredentials credentials() {
-
-		final String username = configBean.awsAccess();
-		final String password = configBean.awsSecret();
-
-		return new BasicAWSCredentials(username, password);
-
-	}
+  
+  private class PluginCredentialsProvider implements AWSCredentialsProvider {
+    public AWSCredentials getCredentials() {
+  		final String username = configBean.awsAccess();
+  		final String password = configBean.awsSecret();
+    
+      if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+    		return new BasicAWSCredentials(username, password);
+      } else {
+        return new InstanceProfileCredentialsProvider().getCredentials();
+      }
+    }
+    
+    public void refresh() {
+    }
+  }
 
 	@Override
 	public boolean isAvailable() {
@@ -353,7 +362,8 @@ public class AmazonServiceProvider implements AmazonService, AmazonManager {
 		}
 
 		if (client == null) {
-			client = new AmazonS3Client(credentials());
+      
+			client = new AmazonS3Client( new PluginCredentialsProvider() );
 			client.setEndpoint(configBean.endpoint());
 		} else {
 			// throw new IllegalStateException("client is present");

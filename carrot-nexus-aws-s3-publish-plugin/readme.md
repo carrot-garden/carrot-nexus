@@ -67,6 +67,8 @@ Nexus -> Administration -> Capabilities
 
 which needs be configured with your amazon credentials, email address, etc.;
 
+alternatively, you may leave amazon credentials blank and use an ec2 instance profile for authentication;
+
 if you delete all plugin configurations, default configuration 
 will be re-created again on nexus restart;
 
